@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="o484jn" name="CMLS_Hw2_Group10" projectType="audioplug" jucerVersion="5.4.7">
-  <MAINGROUP id="HIpda5" name="CMLS_Hw2_Group10">
+<JUCERPROJECT id="o484jn" name="Cmls_hw2_group10" projectType="audioplug" jucerVersion="5.4.7"
+              pluginFormats="buildAU,buildVST3" pluginCharacteristicsValue="pluginWantsMidiIn"
+              pluginManufacturer="Group10" pluginAUMainType="'aufx'">
+  <MAINGROUP id="HIpda5" name="Cmls_hw2_group10">
     <GROUP id="{F8A20297-1A39-AC16-ADBD-3F9532B76BB3}" name="Source">
+      <FILE id="IchtL6" name="Utils.cpp" compile="1" resource="0" file="Source/Utils.cpp"/>
+      <FILE id="B9MkOV" name="Utils.h" compile="0" resource="0" file="Source/Utils.h"/>
+      <FILE id="Vmd5pD" name="Delay.cpp" compile="1" resource="0" file="Source/Delay.cpp"/>
+      <FILE id="OqeoJ3" name="Delay.h" compile="0" resource="0" file="Source/Delay.h"/>
       <FILE id="vWEX1R" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="e0xUDB" name="PluginProcessor.h" compile="0" resource="0"
@@ -33,6 +39,7 @@
         <MODULEPATH id="juce_gui_basics" path="../../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_opengl" path="../../../../../../Applications/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../../../../../Applications/JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
     <VS2019 targetFolder="Builds/VisualStudio2019">
@@ -55,6 +62,7 @@
         <MODULEPATH id="juce_gui_basics" path="../../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_opengl" path="../../../../../../Applications/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../../../../../Applications/JUCE/modules"/>
       </MODULEPATHS>
     </VS2019>
     <CLION targetFolder="Builds/CLion">
@@ -73,6 +81,7 @@
         <MODULEPATH id="juce_gui_basics" path="../../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_opengl" path="../../../../../../Applications/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../../../../../Applications/JUCE/modules"/>
       </MODULEPATHS>
     </CLION>
   </EXPORTFORMATS>
@@ -87,6 +96,7 @@
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_cryptography" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>

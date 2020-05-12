@@ -11,29 +11,32 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "Delay.h"
+
+using AudioGraphIOProcessor = AudioProcessorGraph::AudioGraphIOProcessor;
+using Node = AudioProcessorGraph::Node;
 
 //==============================================================================
 /**
 */
-class Cmls_hw2_group10AudioProcessor  : public AudioProcessor
-{
+class Cmls_hw2_group10AudioProcessor : public AudioProcessor {
 public:
     //==============================================================================
     Cmls_hw2_group10AudioProcessor();
     ~Cmls_hw2_group10AudioProcessor();
 
     //==============================================================================
-    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 
-   #ifndef JucePlugin_PreferredChannelConfigurations
+#ifndef JucePlugin_PreferredChannelConfigurations
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
-   #endif
+#endif
 
-    void processBlock (AudioBuffer<float>&, MidiBuffer&) override;
+    void processBlock(AudioBuffer<float> &, MidiBuffer &) override;
 
     //==============================================================================
-    AudioProcessorEditor* createEditor() override;
+    AudioProcessorEditor *createEditor() override;
     bool hasEditor() const override;
 
     //==============================================================================
@@ -47,15 +50,17 @@ public:
     //==============================================================================
     int getNumPrograms() override;
     int getCurrentProgram() override;
-    void setCurrentProgram (int index) override;
-    const String getProgramName (int index) override;
-    void changeProgramName (int index, const String& newName) override;
+    void setCurrentProgram(int index) override;
+    const String getProgramName(int index) override;
+    void changeProgramName(int index, const String &newName) override;
 
     //==============================================================================
-    void getStateInformation (MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
+    void getStateInformation(MemoryBlock &destData) override;
+    void setStateInformation(const void *data, int sizeInBytes) override;
 
 private:
+    std::unique_ptr<Delay> delay1;
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Cmls_hw2_group10AudioProcessor)
 };
