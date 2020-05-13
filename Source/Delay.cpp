@@ -83,6 +83,7 @@ float Delay::readSample() {
 void Delay::prepareToPlay(double sampleRate, int samplesPerBlock) {
     clear();
     setSampleRate(sampleRate);
+    setDelay(delayTime * Random::getSystemRandom().nextFloat() * 2); // random initialization
     setSize(juce::roundToInt(MAX_DELAY * sampleRate));
 }
 

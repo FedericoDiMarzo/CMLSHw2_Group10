@@ -11,7 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "Delay.h"
+#include "Chorus.h"
 
 using AudioGraphIOProcessor = AudioProcessorGraph::AudioGraphIOProcessor;
 using Node = AudioProcessorGraph::Node;
@@ -59,7 +59,7 @@ public:
     void setStateInformation(const void *data, int sizeInBytes) override;
 
 private:
-    std::unique_ptr<Delay> delay1;
+    Chorus chorus;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Cmls_hw2_group10AudioProcessor)

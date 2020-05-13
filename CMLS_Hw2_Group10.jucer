@@ -5,6 +5,8 @@
               pluginManufacturer="Group10" pluginAUMainType="'aufx'">
   <MAINGROUP id="HIpda5" name="Cmls_hw2_group10">
     <GROUP id="{F8A20297-1A39-AC16-ADBD-3F9532B76BB3}" name="Source">
+      <FILE id="QrPCOG" name="Chorus.cpp" compile="1" resource="0" file="Source/Chorus.cpp"/>
+      <FILE id="qiBYNW" name="Chorus.h" compile="0" resource="0" file="Source/Chorus.h"/>
       <FILE id="IchtL6" name="Utils.cpp" compile="1" resource="0" file="Source/Utils.cpp"/>
       <FILE id="B9MkOV" name="Utils.h" compile="0" resource="0" file="Source/Utils.h"/>
       <FILE id="Vmd5pD" name="Delay.cpp" compile="1" resource="0" file="Source/Delay.cpp"/>

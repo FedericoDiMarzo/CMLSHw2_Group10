@@ -22,10 +22,8 @@ Cmls_hw2_group10AudioProcessor::Cmls_hw2_group10AudioProcessor()
 #endif
                   .withOutput ("Output", AudioChannelSet::stereo(), true)
 #endif
-                  ),
+                  )
 #endif
-
-delay1(new Delay()) // initializing delay1
 {
 }
 Cmls_hw2_group10AudioProcessor::~Cmls_hw2_group10AudioProcessor() {
@@ -85,11 +83,11 @@ void Cmls_hw2_group10AudioProcessor::changeProgramName(int index, const String &
 
 //==============================================================================
 void Cmls_hw2_group10AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
-    delay1->prepareToPlay(sampleRate, samplesPerBlock);
+    chorus.prepareToPlay(sampleRate, samplesPerBlock);
 }
 
 void Cmls_hw2_group10AudioProcessor::releaseResources() {
-    delay1->releaseResources();
+    chorus.releaseResources();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -132,7 +130,8 @@ void Cmls_hw2_group10AudioProcessor::processBlock(AudioBuffer<float> &buffer, Mi
     // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
-    delay1->processBlock(buffer, midiMessages);
+
+    chorus.processBlock(buffer, midiMessages);
 
 }
 
