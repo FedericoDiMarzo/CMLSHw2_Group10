@@ -97,6 +97,7 @@ bool Cmls_hw2_group10AudioProcessor::isBusesLayoutSupported (const BusesLayout& 
     ignoreUnused (layouts);
     return true;
 #else
+    // TODO: set also mono to stereo
     // This is the place where you check if the layout is supported.
     // In this template code we only support mono or stereo.
     if (layouts.getMainOutputChannelSet() != AudioChannelSet::mono()

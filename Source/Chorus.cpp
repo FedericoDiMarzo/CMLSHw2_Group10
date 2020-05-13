@@ -10,55 +10,70 @@
 
 #include "Chorus.h"
 
+#include <memory>
+
 
 Chorus::Chorus()
         : AudioProcessor(
         BusesProperties().withInput("Input", AudioChannelSet::stereo(), true)
                 .withOutput("Output", AudioChannelSet::stereo(), true)) {
-    delayLines.push_back(new Delay());
-    parallelBuffers.push_back(new AudioBuffer<float>());
+    for (int i = 0; i < 4; i++) {
+        delayLines.push_back(std::make_unique<Delay>());
+        bufferPool.push_back(std::make_unique<AudioSampleBuffer>());
+    }
 }
 
 Chorus::~Chorus() {}
 
 void Chorus::prepareToPlay(double sampleRate, int samplesPerBlock) {
-    this->sampleRate = sampleRate;
-    for (int i = 0; i < delayLines.size(); i++) {
-        delayLines[i]->prepareToPlay(sampleRate, samplesPerBlock);
-        parallelBuffers[i]->setSize(1, samplesPerBlock);
+    for (auto &buff : bufferPool) {
+        // sizing all the parallel buffers
+        buff->setSize(1, samplesPerBlock);
     }
 }
 
 void Chorus::releaseResources() {
-    for (auto & delayLine : delayLines) {
-        delayLine->clear();
+    for (auto &delay: delayLines) {
+        delay->releaseResources();
+    }
+
+    for (auto &buff : bufferPool) {
+        // sizing all the parallel buffers
+        buff->clear(1, buff->getNumSamples());
     }
 }
 
 void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
-    int totalNumInputChannels = getTotalNumInputChannels();
-    int totalNumOutputChannels = getTotalNumOutputChannels();
-
-    for (int i = 0; i < delayLines.size(); i++) {
-        parallelBuffers[i]->copyFrom(0, 0, buffer.getReadPointer(0), buffer.getNumSamples());
-        delayLines[i]->processBlock(*parallelBuffers[i], midiMessages);
-    }
-
-    for (int channel = 0; channel < totalNumInputChannels; ++channel) {
+    bool monoToStereo = getTotalNumInputChannels() < getTotalNumOutputChannels();
+    int delayForChannel = 2;
+    for (int channel = 0; channel < getTotalNumInputChannels(); ++channel) {
         // iterating per channel
-        if (channel < totalNumOutputChannels) {
-            // checking for bus coherence
-            float *audioBufferData = buffer.getWritePointer(channel);
-            for (int sampleIndex = 0; sampleIndex < buffer.getNumSamples(); sampleIndex++) {
-                // processing
-                float audioBufferSample = audioBufferData[sampleIndex];
-                audioBufferSample *= (1-wet);
-                for (auto &b : parallelBuffers) {
-                    float *parallelBufferData = b->getWritePointer(channel);
-                }
+        int numberOfBufferToCopy = (monoToStereo) ? 2 * delayForChannel : delayForChannel;
+        for (int i = 0; i < numberOfBufferToCopy; i++) {
+            // if mono to stereo, 4 copies of the same channel are performed
+            int index = i + channel * delayForChannel;
+            bufferPool[index]->copyFrom(0, 0, buffer, channel, 0, buffer.getNumSamples());
+        }
 
-                audioBufferData[sampleIndex] = audioBufferSample;
+        for (int i = 0; i < delayForChannel; i++) {
+            // parallel processing with the delay lines
+            int index = i + channel * delayForChannel;
+            delayLines[index]->processBlock(*bufferPool[index], midiMessages);
+        }
+
+        float *inputBufferData = buffer.getWritePointer(channel);
+        for (int sampleIndex = 0; sampleIndex < buffer.getNumSamples(); sampleIndex++) {
+            // summing delayed and dry signal
+            float inputBufferSample = inputBufferData[sampleIndex];
+            float newSample = inputBufferSample * (1 - wet);
+            for (int i = 0; i < delayForChannel; i++) {
+                int index = i + channel * delayForChannel;
+                const float *delayBufferData = bufferPool[index]->getReadPointer(0);
+                float tmp = delayBufferData[sampleIndex];
+                newSample += (delayBufferData[sampleIndex] / delayForChannel) * wet;
             }
+            inputBufferData[sampleIndex] = newSample;
         }
     }
+
 }

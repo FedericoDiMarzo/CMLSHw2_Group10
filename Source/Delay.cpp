@@ -11,7 +11,7 @@
 #include "Delay.h"
 #include "Utils.h"
 
-const float Delay::MAX_DELAY = 10.0;
+const float Delay::MAX_DELAY = 10.0; // in seconds
 
 Delay::Delay()
         : AudioProcessor(
@@ -73,7 +73,7 @@ float Delay::readSample() {
         readIndex = static_cast<float>(size()) - readIndex;
     }
     float fract = readIndex - (long) readIndex; // decimal residual
-    int readIndexInt = juce::roundToInt(readIndex); // integer residual
+    int readIndexInt = std::floor(readIndex); // integer residual
     readIndexInt %= size(); // overflow wrapping
     int nextRead = (readIndexInt + 1) % size(); // second value used for interpolation
     return Utils::interpolate(delayBuffer[readIndexInt], delayBuffer[nextRead], fract);
@@ -83,7 +83,7 @@ float Delay::readSample() {
 void Delay::prepareToPlay(double sampleRate, int samplesPerBlock) {
     clear();
     setSampleRate(sampleRate);
-    setDelay(delayTime * Random::getSystemRandom().nextFloat() * 2); // random initialization
+    setDelay(delayTime * Random::getSystemRandom().nextFloat()); // random initialization
     setSize(juce::roundToInt(MAX_DELAY * sampleRate));
 }
 
@@ -92,13 +92,10 @@ void Delay::releaseResources() {
 }
 
 void Delay::processBlock(AudioBuffer<float> &audioBuffer, MidiBuffer &midiMessages) {
-    // bus info
-    int totalNumInputChannels = getTotalNumInputChannels();
-    int totalNumOutputChannels = getTotalNumOutputChannels();
 
-    for (int channel = 0; channel < totalNumInputChannels; ++channel) {
+    for (int channel = 0; channel < getTotalNumInputChannels(); ++channel) {
         // iterating per channel
-        if (channel < totalNumOutputChannels) {
+        if (channel < getTotalNumOutputChannels()) {
             // checking for bus coherence
             float *audioBufferData = audioBuffer.getWritePointer(channel);
             for (int sampleIndex = 0; sampleIndex < audioBuffer.getNumSamples(); sampleIndex++) {
@@ -106,7 +103,7 @@ void Delay::processBlock(AudioBuffer<float> &audioBuffer, MidiBuffer &midiMessag
                 float audioBufferSample = audioBufferData[sampleIndex];
                 float delayedSample = readSample();
                 float newSample = wet * delayedSample + (1 - wet) * audioBufferSample;
-                writeNewSample(newSample);
+                writeNewSample(audioBufferSample + feedback * delayedSample);
                 audioBufferData[sampleIndex] = newSample;
             }
         }

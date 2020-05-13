@@ -47,9 +47,9 @@ public:
     void setStateInformation (const void*, int) override   {}
 
 private:
-    std::vector<Delay*> delayLines;
-    std::vector<AudioSampleBuffer*> parallelBuffers;
+    std::vector<std::unique_ptr<Delay>> delayLines;
+    std::vector<std::unique_ptr<AudioSampleBuffer>> bufferPool;
     float wet = 0.8;
-    float feedback = 0.15;
+    float feedback = 0;
     float sampleRate = 0;
 };
