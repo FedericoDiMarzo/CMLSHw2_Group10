@@ -39,6 +39,7 @@ void Delay::clear() {
      * Clears the buffer.
      */
     std::fill(delayBuffer.begin(), delayBuffer.end(), 0);
+    lastIndex = 0;
 }
 
 
@@ -83,7 +84,6 @@ float Delay::readSample() {
 void Delay::prepareToPlay(double sampleRate, int samplesPerBlock) {
     clear();
     setSampleRate(sampleRate);
-    setDelay(delayTime * Random::getSystemRandom().nextFloat()); // random initialization
     setSize(juce::roundToInt(MAX_DELAY * sampleRate));
 }
 
@@ -100,10 +100,10 @@ void Delay::processBlock(AudioBuffer<float> &audioBuffer, MidiBuffer &midiMessag
             float *audioBufferData = audioBuffer.getWritePointer(channel);
             for (int sampleIndex = 0; sampleIndex < audioBuffer.getNumSamples(); sampleIndex++) {
                 // processing
-                float audioBufferSample = audioBufferData[sampleIndex];
+                float inputBufferSample = audioBufferData[sampleIndex];
                 float delayedSample = readSample();
-                float newSample = wet * delayedSample + (1 - wet) * audioBufferSample;
-                writeNewSample(audioBufferSample + feedback * delayedSample);
+                float newSample = wet * delayedSample + (1 - wet) * inputBufferSample;
+                writeNewSample((1 - feedback) * inputBufferSample + feedback * delayedSample);
                 audioBufferData[sampleIndex] = newSample;
             }
         }

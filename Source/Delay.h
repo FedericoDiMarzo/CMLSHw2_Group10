@@ -21,6 +21,7 @@ public:
     size_t size();
 
     void setDelay(float delayTime) { this->delayTime = delayTime; } // TODO: check MAX_DELAY
+    float getDelayTime() {return delayTime;}
     void setWet(float wet) { this->wet = wet; }
 
     void setFeedback(float feedback) { this->feedback = feedback; }
@@ -74,8 +75,8 @@ private:
 
     std::vector<float> delayBuffer;
     int lastIndex = 0;
-    float delayTime = 0.4;
+    float delayTime = 0.12;
     float wet = 1;
-    float feedback = 0;
+    float feedback = 0.3;
     float sampleRate = 0;
 };

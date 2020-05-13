@@ -19,13 +19,18 @@ Chorus::Chorus()
                 .withOutput("Output", AudioChannelSet::stereo(), true)) {
     for (int i = 0; i < 4; i++) {
         delayLines.push_back(std::make_unique<Delay>());
-        bufferPool.push_back(std::make_unique<AudioSampleBuffer>());
+        float rand = (Random::getSystemRandom().nextFloat() - 0.5f) * 0.1f;
+        delayLines[i]->setDelay(delayLines[i]->getDelayTime() + rand);
+        bufferPool.push_back(std::unique_ptr<AudioSampleBuffer>(new AudioSampleBuffer(1, 512)));
     }
 }
 
 Chorus::~Chorus() {}
 
 void Chorus::prepareToPlay(double sampleRate, int samplesPerBlock) {
+    for (auto &delay: delayLines) {
+        delay->prepareToPlay(sampleRate, samplesPerBlock);
+    }
     for (auto &buff : bufferPool) {
         // sizing all the parallel buffers
         buff->setSize(1, samplesPerBlock);
@@ -38,8 +43,8 @@ void Chorus::releaseResources() {
     }
 
     for (auto &buff : bufferPool) {
-        // sizing all the parallel buffers
-        buff->clear(1, buff->getNumSamples());
+        // clearing all the parallel buffers
+        buff->clear(0, buff->getNumSamples());
     }
 }
 
@@ -58,10 +63,12 @@ void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) 
         for (int i = 0; i < delayForChannel; i++) {
             // parallel processing with the delay lines
             int index = i + channel * delayForChannel;
-            delayLines[index]->processBlock(*bufferPool[index], midiMessages);
+            delayLines[index]->processBlock(*(bufferPool[index]), midiMessages);
         }
 
         float *inputBufferData = buffer.getWritePointer(channel);
+        
+
         for (int sampleIndex = 0; sampleIndex < buffer.getNumSamples(); sampleIndex++) {
             // summing delayed and dry signal
             float inputBufferSample = inputBufferData[sampleIndex];

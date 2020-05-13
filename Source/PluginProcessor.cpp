@@ -84,10 +84,13 @@ void Cmls_hw2_group10AudioProcessor::changeProgramName(int index, const String &
 //==============================================================================
 void Cmls_hw2_group10AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
     chorus.prepareToPlay(sampleRate, samplesPerBlock);
+    //delay.prepareToPlay(sampleRate, samplesPerBlock);
+
 }
 
 void Cmls_hw2_group10AudioProcessor::releaseResources() {
     chorus.releaseResources();
+    //delay.releaseResources();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -133,7 +136,8 @@ void Cmls_hw2_group10AudioProcessor::processBlock(AudioBuffer<float> &buffer, Mi
         buffer.clear(i, 0, buffer.getNumSamples());
 
     chorus.processBlock(buffer, midiMessages);
-
+    buffer.applyGain(1.5);
+    //delay.processBlock(buffer, midiMessages);
 }
 
 //==============================================================================

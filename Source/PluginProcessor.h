@@ -60,6 +60,7 @@ public:
 
 private:
     Chorus chorus;
+    Delay delay;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Cmls_hw2_group10AudioProcessor)
