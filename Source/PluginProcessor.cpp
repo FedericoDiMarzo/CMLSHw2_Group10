@@ -9,7 +9,57 @@
 */
 
 #include "PluginProcessor.h"
-#include "PluginEditor.h"
+
+//begin GUI Parameters definition
+
+    // Defining a namespace
+namespace IDs
+{
+    static String intensity     { "intensity" };
+    static String mix           { "mix" };
+
+    static String shape     { "shape" }; 
+    static String rate      { "rate" }; //frequency of the LFO
+    
+    static String enhance   { "enchance"};
+}
+
+    //layout creator
+AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
+{
+    AudioProcessorValueTreeState::ParameterLayout layout;
+
+    // TODO: set the correct limits for the parameters
+
+// clustering the parameters into groups
+
+    // central big knob
+    auto big_knob = std::make_unique<AudioProcessorParameterGroup>("big_knob", TRANS ("BIG KNOB"), "|");
+
+    big_knob->addChild(std::make_unique<AudioParameterFloat>(IDs::intensity, "Intensity", NormalisableRange<float>(0.0f, 1.0f), 0.7f));
+                          
+
+    // lfo group
+    auto lfo = std::make_unique<AudioProcessorParameterGroup>("lfo", TRANS ("LFO"), "|");
+
+    lfo->addChild (std::make_unique<AudioParameterFloat>(IDs::shape, "Shape", NormalisableRange<float>(0.0f, 1.0f), 0.0f),
+                   std::make_unique<AudioParameterFloat>(IDs::rate, "Rate", NormalisableRange<float>(50.0f, 1000.0f), 0.0f));
+
+ 
+    // utility group
+    auto utility = std::make_unique<AudioProcessorParameterGroup>("utility", TRANS ("UTILITY"), "|");
+
+    utility->addChild(std::make_unique<AudioParameterFloat>(IDs::enhance, "Enhance", NormalisableRange<float>(0.0f,1.0f),0.0f),
+                      std::make_unique<AudioParameterFloat>(IDs::mix, "Mix", NormalisableRange<float>(0.0f, 1.0f), 1.0f));
+                  
+                   
+    layout.add (std::move (big_knob),
+                std::move (lfo),
+                std::move (utility));
+                
+    return layout;
+}//end GUI Parameters definition
+
 
 //==============================================================================
 Cmls_hw2_group10AudioProcessor::Cmls_hw2_group10AudioProcessor()
@@ -22,10 +72,34 @@ Cmls_hw2_group10AudioProcessor::Cmls_hw2_group10AudioProcessor()
 #endif
                   .withOutput ("Output", AudioChannelSet::stereo(), true)
 #endif
-                  )
+                  ),
 #endif
+
+
+//add Listener for the parameters
+    treeState (*this, nullptr, "PARAMETERS", createParameterLayout())
 {
+    // big knob parameter
+    intensity = treeState.getRawParameterValue (IDs::intensity);
+    jassert (intensity != nullptr);
+
+
+    // lfo group parameters
+    treeState.addParameterListener (IDs::shape, this);
+    
+    rate = treeState.getRawParameterValue (IDs::rate);
+    jassert (rate != nullptr);
+    
+
+    // utility group parameters   
+    mix = treeState.getRawParameterValue(IDs::mix);
+    jassert(mix != nullptr);
+
+    enhance = treeState.getRawParameterValue (IDs::enhance);
+    jassert (enhance != nullptr);
 }
+
+
 Cmls_hw2_group10AudioProcessor::~Cmls_hw2_group10AudioProcessor() {
 }
 
@@ -82,8 +156,29 @@ void Cmls_hw2_group10AudioProcessor::changeProgramName(int index, const String &
 }
 
 //==============================================================================
+
+
+     
+void Cmls_hw2_group10AudioProcessor::parameterChanged (const String& param, float value){
+}
+
+
 void Cmls_hw2_group10AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
+  /* oscillator - for debug purposes
+
+    const auto numChannels = getTotalNumOutputChannels();
+  
+    mainOSC.initialise([](auto in) { return std::sin(in); });
+    dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = uint32(samplesPerBlock);
+    spec.numChannels = uint32(numChannels);
+
+    mainOSC.prepare(spec);
+    */
+
     chorus.prepareToPlay(sampleRate, samplesPerBlock);
+       
     //delay.prepareToPlay(sampleRate, samplesPerBlock);
 
 }
@@ -135,6 +230,24 @@ void Cmls_hw2_group10AudioProcessor::processBlock(AudioBuffer<float> &buffer, Mi
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
+
+    /* oscillator for debug purposes
+
+    auto* channelData = buffer.getWritePointer(0);
+    for (int i = 0; i < buffer.getNumSamples(); ++i)
+    {
+        mainOSC.setFrequency(rate->load());
+        channelData[i] = jlimit(-1.0f, 1.0f, mainOSC.processSample(0.0f)); 
+            }
+
+    for (int i = 1; i < getTotalNumOutputChannels(); ++i)
+        buffer.copyFrom(i, 0, buffer.getReadPointer(0), buffer.getNumSamples());
+    */
+
+
+
+
+
     chorus.processBlock(buffer, midiMessages);
     buffer.applyGain(1.5);
     //delay.processBlock(buffer, midiMessages);
@@ -146,7 +259,7 @@ bool Cmls_hw2_group10AudioProcessor::hasEditor() const {
 }
 
 AudioProcessorEditor *Cmls_hw2_group10AudioProcessor::createEditor() {
-    return new Cmls_hw2_group10AudioProcessorEditor(*this);
+    return new foleys::MagicPluginEditor (magicState);
 }
 
 //==============================================================================
@@ -154,11 +267,13 @@ void Cmls_hw2_group10AudioProcessor::getStateInformation(MemoryBlock &destData) 
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+    magicState.getStateInformation(destData);
 }
 
 void Cmls_hw2_group10AudioProcessor::setStateInformation(const void *data, int sizeInBytes) {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+    magicState.setStateInformation(data, sizeInBytes, getActiveEditor());
 }
 
 //==============================================================================
