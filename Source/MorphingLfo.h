@@ -18,7 +18,9 @@ public:
     MorphingLfo(int morphingSteps, int tableResolution);
     virtual ~MorphingLfo();
 
-    void setFrequency(float frequency) { this->frequency = frequency; }
+    void setFrequency(float frequency);
+
+    float getFrequency() { return frequency; }
 
     void setShapeIndex(float shapeIndex) { this->shapeIndex = shapeIndex; }
 

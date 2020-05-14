@@ -44,6 +44,11 @@ private:
     void setDelay(float delayTime) noexcept;
 
     /**
+     * Apply the lfo to the delay lines.
+     */
+    void applyLfo() noexcept ;
+
+    /**
      * Implemented for processing chunks of the buffer.
      * @param buffer
      * @param midiMessages
@@ -59,7 +64,7 @@ private:
     int delaysForChannel = 2;
 
     // temporary buffers used during the processing
-    AudioBuffer<float> bufferPool[2];
+    std::vector<std::unique_ptr<AudioBuffer<float>>> bufferPool;
 
     // lfo used for modulating the delay time of the delay lines
     std::vector<std::unique_ptr<MorphingLfo>> lfoPool;

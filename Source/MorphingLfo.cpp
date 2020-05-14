@@ -14,6 +14,7 @@ MorphingLfo::MorphingLfo(int morphingSteps, int tableResolution) {
     for (int i = 0; i < morphingSteps; i++) {
         lfoPool.push_back(std::make_unique<dsp::Oscillator<float>>());
         lfoPool[i]->initialise([](float x) {return std::sin(x);}, tableResolution); // sine lfo
+        lfoPool[i]->setFrequency(frequency);
     }
 }
 
@@ -22,6 +23,15 @@ MorphingLfo::~MorphingLfo() {}
 float MorphingLfo::getNextValue() {
     return lfoPool[0]->processSample(0);
 }
+
+
+void MorphingLfo::setFrequency(float frequency) {
+    this->frequency = frequency;
+    for (auto &lfo : lfoPool) {
+        lfo->setFrequency(frequency);
+    }
+}
+
 
 //==============================================================================
 
