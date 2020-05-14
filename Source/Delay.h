@@ -75,7 +75,7 @@ private:
 
     std::vector<float> delayBuffer;
     int lastIndex = 0;
-    float delayTime = 0.12;
+    float delayTime = 0.22;
     float wet = 1;
     float feedback = 0.3;
     float sampleRate = 0;
