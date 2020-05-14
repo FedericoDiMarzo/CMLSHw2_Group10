@@ -26,15 +26,62 @@ public:
     //==============================================================================
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
-    void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override;
+    void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept override;
 
 
 private:
+    /**
+     * Sets the delayTime of a particular delay.
+     * @param delayIndex
+     * @param delayTime
+     */
+    void setDelay(int delayIndex, float delayTime) noexcept;
+
+    /**
+     * Sets the delayTime for all the delays.
+     * @param delayTime
+     */
+    void setDelay(float delayTime) noexcept;
+
+    /**
+     * Implemented for processing chunks of the buffer.
+     * @param buffer
+     * @param midiMessages
+     */
+    void _processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept;
+
+    //==============================================================================
+
+    // delay lines used to implement the chorus
     std::vector<std::unique_ptr<Delay>> delayLines;
-    std::vector<std::unique_ptr<AudioSampleBuffer>> bufferPool;
+
+    // number of delay lines for channel
+    int delaysForChannel = 2;
+
+    // temporary buffers used during the processing
+    AudioBuffer<float> bufferPool[2];
+
+    // lfo used for modulating the delay time of the delay lines
     std::vector<std::unique_ptr<MorphingLfo>> lfoPool;
+
+    // block of audio used for processing sub blocks
+    std::unique_ptr<dsp::AudioBlock<float>> tmpAudioBlock;
+
+    // heap memory reserved for tmpAudioBlock
+    HeapBlock<char> heapBlock;
+
+    // control rate
     int lfoSubRate = 100;
+
+    // counter used to trigger the control update
+    int lfoCounter = 0;
+
+    // mix between dry and effected signal
     float wet = 0.8;
+
+    // feedback of the delays
     float feedback = 0;
+
+    // current sample rate
     float sampleRate = 0;
 };

@@ -15,28 +15,51 @@
 
 Chorus::Chorus() {
     for (int i = 0; i < 4; i++) {
+        // pushing all the delay lines
         delayLines.push_back(std::make_unique<Delay>());
         float rand = (Random::getSystemRandom().nextFloat() - 0.5f) * 0.1f;
         delayLines[i]->setDelay(delayLines[i]->getDelayTime() + rand);
-        bufferPool.push_back(std::unique_ptr<AudioSampleBuffer>(new AudioSampleBuffer(1, 512)));
+        delayLines[i]->setWet(1);
+
+        // pushing the lfo
         lfoPool.push_back(std::unique_ptr<MorphingLfo>(new MorphingLfo(1, 1024)));
     }
 }
 
 Chorus::~Chorus() {}
 
+void Chorus::setDelay(int delayIndex, float delayTime) noexcept {
+    for (int i = 0; i < delaysForChannel; i++) {
+        int index = delayIndex * delaysForChannel + i;
+        delayLines[index]->setDelay(delayTime);
+    }
+}
+
+void Chorus::setDelay(float delayTime) noexcept {
+    setDelay(0, delayTime);
+    setDelay(1, delayTime);
+}
+
+//==============================================================================
+
 void Chorus::prepareToPlay(double sampleRate, int samplesPerBlock) {
+    this->sampleRate = sampleRate;
+    lfoCounter = 0;
+
     for (auto &delay: delayLines) {
         delay->prepareToPlay(sampleRate, samplesPerBlock);
     }
     for (auto &buff : bufferPool) {
         // sizing all the parallel buffers
-        buff->setSize(1, samplesPerBlock);
+        buff.setSize(1, samplesPerBlock);
+        buff.clear();
     }
 
     for (auto &lfo : lfoPool) {
-        lfo->prepareToPlay(sampleRate, samplesPerBlock);
+        lfo->prepareToPlay(sampleRate / lfoSubRate, samplesPerBlock);
     }
+
+    tmpAudioBlock = std::make_unique<dsp::AudioBlock<float>>(heapBlock, 2, samplesPerBlock);
 }
 
 void Chorus::releaseResources() {
@@ -46,7 +69,7 @@ void Chorus::releaseResources() {
 
     for (auto &buff : bufferPool) {
         // clearing all the parallel buffers
-        buff->clear(0, buff->getNumSamples());
+        buff.clear();
     }
 
     for (auto &lfo : lfoPool) {
@@ -54,40 +77,45 @@ void Chorus::releaseResources() {
     }
 }
 
-void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
-    bool monoToStereo = false;
-    int delayForChannel = 2;
-    for (int channel = 0; channel < buffer.getNumChannels(); ++channel) {
-        // iterating per channel
-        int numberOfBufferToCopy = (monoToStereo) ? 2 * delayForChannel : delayForChannel;
-        for (int i = 0; i < numberOfBufferToCopy; i++) {
-            // if mono to stereo, 4 copies of the same channel are performed
-            int index = i + channel * delayForChannel;
-            bufferPool[index]->copyFrom(0, 0, buffer, channel, 0, buffer.getNumSamples());
-        }
-
-        for (int i = 0; i < delayForChannel; i++) {
-            // parallel processing with the delay lines
-            int index = i + channel * delayForChannel;
-            delayLines[index]->processBlock(*(bufferPool[index]), midiMessages);
-        }
-
-        // NEW FAST SUM
-
-
-
-        // OLD SLOW SUM
-        for (int sampleIndex = 0; sampleIndex < buffer.getNumSamples(); sampleIndex++) {
-            // summing delayed and dry signal
-            float inputSample = buffer.getSample(channel, sampleIndex);
-            float newSample = inputSample * (1 - wet);
-            for (int i = 0; i < delayForChannel; i++) {
-                int index = i + channel * delayForChannel;
-                float wetSample = bufferPool[index]->getSample(0, sampleIndex);
-                newSample += (wetSample / delayForChannel) * wet;
-            }
-            buffer.setSample(channel, sampleIndex, newSample);
-        }
-    }
-
+void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept {
+    _processBlock(buffer, midiMessages);
 }
+
+void Chorus::_processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept {
+    bool monoToStereo = false;
+    bufferPool[1].clear(); // clearing the wet accumulation buffer
+
+    // iterating per channel
+    for (int channel = 0; channel < buffer.getNumChannels(); ++channel) {
+        for (int i = 0; i < delaysForChannel; i++) {
+
+            // obtaining the index for delayLines
+            int index = i + delaysForChannel * channel;
+
+            // copying the input buffer in bufferPool[0]
+            bufferPool[0].copyFrom(0, 0, buffer,
+                                   channel, 0, buffer.getNumSamples());
+
+            // processing
+            delayLines[index]->processBlock(bufferPool[0], midiMessages);
+
+            // accumulating the output of the delay lines
+            bufferPool[1].addFrom(0, 0, bufferPool[0],
+                                  0, 0, buffer.getNumSamples());
+
+        }
+
+        // scaling the wet based on the number of delays
+        bufferPool[1].applyGain(1.0 / delaysForChannel * wet);
+
+        // scaling the dry signal
+        //buffer.applyGain(1-wet);
+
+        // summing dry and wet signals
+        buffer.addFrom(channel, 0, bufferPool[1],
+                0, 0, buffer.getNumSamples());
+
+    }
+}
+
+

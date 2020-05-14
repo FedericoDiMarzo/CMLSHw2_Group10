@@ -18,33 +18,20 @@ Delay::Delay() {}
 Delay::~Delay() {}
 
 size_t Delay::size() {
-    /**
-     * Size of the buffer.
-     */
     return delayBuffer.size();
 }
 
 void Delay::setSize(size_t size) {
-    /**
-     * Sets the size of the buffer.
-     */
     delayBuffer.resize(size);
 }
 
 void Delay::clear() {
-    /**
-     * Clears the buffer.
-     */
     std::fill(delayBuffer.begin(), delayBuffer.end(), 0);
     lastIndex = 0;
 }
 
 
-void Delay::writeNewSample(float sample) {
-    /**
-     * Writes a new sample in the buffer, and
-     * increments index.
-     */
+void Delay::writeNewSample(float sample) noexcept {
     if (size() == 0) {
         // avoid zero divisions
         return;
@@ -54,12 +41,7 @@ void Delay::writeNewSample(float sample) {
     delayBuffer[lastIndex++] = sample;
 }
 
-float Delay::readSample() {
-    /**
-     * Reads a sample, depending on the delay time.
-     * Linear interpolation is performed in the buffer.
-     */
-
+float Delay::readSample() noexcept {
     if (size() == 0) {
         // avoids zero divisions
         return 0;
@@ -74,7 +56,8 @@ float Delay::readSample() {
     int readIndexInt = std::floor(readIndex); // integer residual
     readIndexInt %= size(); // overflow wrapping
     int nextRead = (readIndexInt + 1) % size(); // second value used for interpolation
-    return utils::interpolate(delayBuffer[readIndexInt], delayBuffer[nextRead], fract);
+    float interpolatedValue = utils::interpolate(delayBuffer[readIndexInt], delayBuffer[nextRead], fract);
+    return interpolatedValue;
 
 }
 
@@ -88,10 +71,10 @@ void Delay::releaseResources() {
     clear();
 }
 
-void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
+void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept {
 
+    // iterating per channel
     for (int channel = 0; channel < buffer.getNumChannels(); ++channel) {
-        // iterating per channel
         for (int sampleIndex = 0; sampleIndex < buffer.getNumSamples(); sampleIndex++) {
             // processing
             float inputBufferSample = buffer.getSample(channel, sampleIndex);

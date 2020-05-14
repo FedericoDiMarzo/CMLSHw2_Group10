@@ -1,16 +1,10 @@
-/*
-  ==============================================================================
-
-    ProcessorTemplate.h
-    Created: 14 May 2020 7:11:14pm
-    Author:  Federico Di Marzo
-
-  ==============================================================================
-*/
 
 #pragma once
 #include <JuceHeader.h>
 
+/**
+ * Template class used for defining an audio processor.
+ */
 class ProcessorTemplate {
 public:
     ProcessorTemplate() = default;

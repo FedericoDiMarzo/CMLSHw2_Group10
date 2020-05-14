@@ -162,6 +162,8 @@ void Cmls_hw2_group10AudioProcessor::changeProgramName(int index, const String &
 void Cmls_hw2_group10AudioProcessor::parameterChanged (const String& param, float value){
 }
 
+//==============================================================================
+//==============================================================================
 
 void Cmls_hw2_group10AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
   /* oscillator - for debug purposes
@@ -182,6 +184,9 @@ void Cmls_hw2_group10AudioProcessor::prepareToPlay(double sampleRate, int sample
     //delay.prepareToPlay(sampleRate, samplesPerBlock);
 
 }
+
+//==============================================================================
+//==============================================================================
 
 void Cmls_hw2_group10AudioProcessor::releaseResources() {
     chorus.releaseResources();
