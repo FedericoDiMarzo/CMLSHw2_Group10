@@ -13,10 +13,7 @@
 
 const float Delay::MAX_DELAY = 10.0; // in seconds
 
-Delay::Delay()
-        : AudioProcessor(
-        BusesProperties().withInput("Input", AudioChannelSet::mono(), true)
-                .withOutput("Output", AudioChannelSet::mono(), true)) {}
+Delay::Delay() {}
 
 Delay::~Delay() {}
 
@@ -91,21 +88,17 @@ void Delay::releaseResources() {
     clear();
 }
 
-void Delay::processBlock(AudioBuffer<float> &audioBuffer, MidiBuffer &midiMessages) {
+void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
 
-    for (int channel = 0; channel < getTotalNumInputChannels(); ++channel) {
+    for (int channel = 0; channel < buffer.getNumChannels(); ++channel) {
         // iterating per channel
-        if (channel < getTotalNumOutputChannels()) {
-            // checking for bus coherence
-            float *audioBufferData = audioBuffer.getWritePointer(channel);
-            for (int sampleIndex = 0; sampleIndex < audioBuffer.getNumSamples(); sampleIndex++) {
-                // processing
-                float inputBufferSample = audioBufferData[sampleIndex];
-                float delayedSample = readSample();
-                float newSample = wet * delayedSample + (1 - wet) * inputBufferSample;
-                writeNewSample((1 - feedback) * inputBufferSample + feedback * delayedSample);
-                audioBufferData[sampleIndex] = newSample;
-            }
+        for (int sampleIndex = 0; sampleIndex < buffer.getNumSamples(); sampleIndex++) {
+            // processing
+            float inputBufferSample = buffer.getSample(channel, sampleIndex);
+            float delayedSample = readSample();
+            float newSample = wet * delayedSample + (1 - wet) * inputBufferSample;
+            writeNewSample((1 - feedback) * inputBufferSample + feedback * delayedSample);
+            buffer.setSample(channel, sampleIndex, newSample);
         }
     }
 }
