@@ -6,8 +6,9 @@
   <MAINGROUP id="HIpda5" name="Cmls_hw2_group10">
     <GROUP id="{F8A20297-1A39-AC16-ADBD-3F9532B76BB3}" name="Source">
       <FILE id="QrPCOG" name="Chorus.cpp" compile="1" resource="0" file="Source/Chorus.cpp"/>
+      <FILE id="mCJjKL" name="ProcessorTemplate.h" compile="0" resource="0"
+            file="Source/ProcessorTemplate.h"/>
       <FILE id="qiBYNW" name="Chorus.h" compile="0" resource="0" file="Source/Chorus.h"/>
-      <FILE id="IchtL6" name="Utils.cpp" compile="1" resource="0" file="Source/Utils.cpp"/>
       <FILE id="B9MkOV" name="Utils.h" compile="0" resource="0" file="Source/Utils.h"/>
       <FILE id="Vmd5pD" name="Delay.cpp" compile="1" resource="0" file="Source/Delay.cpp"/>
       <FILE id="OqeoJ3" name="Delay.h" compile="0" resource="0" file="Source/Delay.h"/>
@@ -15,7 +16,12 @@
             file="Source/PluginProcessor.cpp"/>
       <FILE id="e0xUDB" name="PluginProcessor.h" compile="0" resource="0"
             file="Source/PluginProcessor.h"/>
+      <FILE id="J8iv6k" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="sCzf35" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
+    <FILE id="muEExV" name="MorphingLfo.cpp" compile="1" resource="0" file="Source/MorphingLfo.cpp"/>
+    <FILE id="rBHW0g" name="MorphingLfo.h" compile="0" resource="0" file="Source/MorphingLfo.h"/>
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX">
@@ -39,7 +45,7 @@
         <MODULEPATH id="juce_gui_extra" path="../../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_opengl" path="../../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_dsp" path="../../../../../../Applications/JUCE/modules"/>
-        <MODULEPATH id="foleys_gui_magic" path="../../JUCE/Modules"/>
+        <MODULEPATH id="foleys_gui_magic" path="."/>
       </MODULEPATHS>
     </XCODE_MAC>
     <VS2019 targetFolder="Builds/VisualStudio2019">
@@ -63,10 +69,10 @@
         <MODULEPATH id="juce_gui_extra" path="../../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_opengl" path="../../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_dsp" path="../../../../../../Applications/JUCE/modules"/>
-        <MODULEPATH id="foleys_gui_magic" path="../../JUCE/Modules"/>
+        <MODULEPATH id="foleys_gui_magic" path="."/>
       </MODULEPATHS>
     </VS2019>
-    <CLION targetFolder="Builds/CLion" clionXcodeEnabled="1">
+    <CLION targetFolder="Builds/CLion">
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_audio_devices" path="../../../../../../Applications/JUCE/modules"/>
@@ -83,12 +89,12 @@
         <MODULEPATH id="juce_gui_extra" path="../../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_opengl" path="../../../../../../Applications/JUCE/modules"/>
         <MODULEPATH id="juce_dsp" path="../../../../../../Applications/JUCE/modules"/>
-        <MODULEPATH id="foleys_gui_magic" path="../../JUCE/Modules"/>
+        <MODULEPATH id="foleys_gui_magic" path="."/>
       </MODULEPATHS>
     </CLION>
   </EXPORTFORMATS>
   <MODULES>
-    <MODULE id="foleys_gui_magic" showAllCode="1" useLocalCopy="1" useGlobalPath="1"/>
+    <MODULE id="foleys_gui_magic" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
@@ -108,7 +114,6 @@
   </MODULES>
   <LIVE_SETTINGS>
     <OSX/>
-    <WINDOWS windowsTargetPlatformVersion="10.0.18362.0" buildEnabled="1"/>
   </LIVE_SETTINGS>
   <JUCEOPTIONS JUCE_VST3_CAN_REPLACE_VST2="0" JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
 </JUCERPROJECT>

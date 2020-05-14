@@ -74,7 +74,7 @@ float Delay::readSample() {
     int readIndexInt = std::floor(readIndex); // integer residual
     readIndexInt %= size(); // overflow wrapping
     int nextRead = (readIndexInt + 1) % size(); // second value used for interpolation
-    return Utils::interpolate(delayBuffer[readIndexInt], delayBuffer[nextRead], fract);
+    return utils::interpolate(delayBuffer[readIndexInt], delayBuffer[nextRead], fract);
 
 }
 

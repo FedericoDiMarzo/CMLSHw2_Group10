@@ -13,15 +13,13 @@
 #include <memory>
 
 
-Chorus::Chorus()
-        : AudioProcessor(
-        BusesProperties().withInput("Input", AudioChannelSet::stereo(), true)
-                .withOutput("Output", AudioChannelSet::stereo(), true)) {
+Chorus::Chorus() {
     for (int i = 0; i < 4; i++) {
         delayLines.push_back(std::make_unique<Delay>());
         float rand = (Random::getSystemRandom().nextFloat() - 0.5f) * 0.1f;
         delayLines[i]->setDelay(delayLines[i]->getDelayTime() + rand);
         bufferPool.push_back(std::unique_ptr<AudioSampleBuffer>(new AudioSampleBuffer(1, 512)));
+        lfoPool.push_back(std::unique_ptr<MorphingLfo>(new MorphingLfo(1, 1024)));
     }
 }
 
@@ -35,6 +33,10 @@ void Chorus::prepareToPlay(double sampleRate, int samplesPerBlock) {
         // sizing all the parallel buffers
         buff->setSize(1, samplesPerBlock);
     }
+
+    for (auto &lfo : lfoPool) {
+        lfo->prepareToPlay(sampleRate, samplesPerBlock);
+    }
 }
 
 void Chorus::releaseResources() {
@@ -46,12 +48,16 @@ void Chorus::releaseResources() {
         // clearing all the parallel buffers
         buff->clear(0, buff->getNumSamples());
     }
+
+    for (auto &lfo : lfoPool) {
+        lfo->releaseResources();
+    }
 }
 
 void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
-    bool monoToStereo = getTotalNumInputChannels() < getTotalNumOutputChannels();
+    bool monoToStereo = false;
     int delayForChannel = 2;
-    for (int channel = 0; channel < getTotalNumInputChannels(); ++channel) {
+    for (int channel = 0; channel < buffer.getNumChannels(); ++channel) {
         // iterating per channel
         int numberOfBufferToCopy = (monoToStereo) ? 2 * delayForChannel : delayForChannel;
         for (int i = 0; i < numberOfBufferToCopy; i++) {
@@ -66,20 +72,21 @@ void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) 
             delayLines[index]->processBlock(*(bufferPool[index]), midiMessages);
         }
 
-        float *inputBufferData = buffer.getWritePointer(channel);
-        
+        // NEW FAST SUM
 
+
+
+        // OLD SLOW SUM
         for (int sampleIndex = 0; sampleIndex < buffer.getNumSamples(); sampleIndex++) {
             // summing delayed and dry signal
-            float inputBufferSample = inputBufferData[sampleIndex];
-            float newSample = inputBufferSample * (1 - wet);
+            float inputSample = buffer.getSample(channel, sampleIndex);
+            float newSample = inputSample * (1 - wet);
             for (int i = 0; i < delayForChannel; i++) {
                 int index = i + channel * delayForChannel;
-                const float *delayBufferData = bufferPool[index]->getReadPointer(0);
-                float tmp = delayBufferData[sampleIndex];
-                newSample += (delayBufferData[sampleIndex] / delayForChannel) * wet;
+                float wetSample = bufferPool[index]->getSample(0, sampleIndex);
+                newSample += (wetSample / delayForChannel) * wet;
             }
-            inputBufferData[sampleIndex] = newSample;
+            buffer.setSample(channel, sampleIndex, newSample);
         }
     }
 
