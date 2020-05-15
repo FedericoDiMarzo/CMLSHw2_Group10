@@ -18,7 +18,7 @@ Chorus::Chorus() {
         // pushing all the delay lines
         delayLines.push_back(std::make_unique<Delay>());
         float rand = (Random::getSystemRandom().nextFloat() - 0.5f) * 0.1f;
-        delayLines[i]->setDelay(delayLines[i]->getDelayTime() + rand);
+        //delayLines[i]->setDelay(delayLines[i]->getDelayTime() + rand);
         delayLines[i]->setWet(1);
         delayLines[i]->setFeedback(feedback);
 

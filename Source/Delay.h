@@ -86,7 +86,7 @@ private:
     AudioBuffer<float> delayBuffer;
 
     // index for the circular buffer
-    int lastIndex = 0;
+    int lastIndex[2];
 
     // delay time in seconds
     float delayTime = 0.4;
@@ -95,7 +95,7 @@ private:
     float wet = 1;
 
     // feedback of the delay
-    float feedback = 0.6;
+    float feedback = 0;
 
     // current sample rate
     float sampleRate = 0;

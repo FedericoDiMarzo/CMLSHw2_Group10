@@ -11,7 +11,7 @@
 #include "Delay.h"
 #include "Utils.h"
 
-const float Delay::MAX_DELAY = 2; // in seconds
+const float Delay::MAX_DELAY = 5; // in seconds
 
 Delay::Delay() {}
 
@@ -27,7 +27,8 @@ void Delay::setSize(size_t size) {
 
 void Delay::clear() {
     delayBuffer.clear();
-    lastIndex = 0;
+    lastIndex[0] = 0;
+    lastIndex[1] = 0;
 }
 
 
@@ -38,9 +39,9 @@ void Delay::writeNewSample(int channel, float sample) noexcept {
     }
 
     // circular wrapping
-    delayBuffer.setSample(channel, lastIndex, sample);
-    lastIndex++;
-    lastIndex %= size();
+    delayBuffer.setSample(channel, lastIndex[channel], sample);
+    lastIndex[channel]++;
+    lastIndex[channel] %= size();
 }
 
 float Delay::readSample(int channel) noexcept {
@@ -49,20 +50,21 @@ float Delay::readSample(int channel) noexcept {
         return 0;
     }
 
-    float readIndex = static_cast<float>(lastIndex) - (delayTime * sampleRate);
+    float readIndex = static_cast<float>(lastIndex[channel]) - (delayTime * sampleRate);
     if (readIndex < 0) {
         // underflow wrapping
-        readIndex = static_cast<float>(size()) - readIndex;
+        readIndex = static_cast<float>(size()) + readIndex;
     }
+
     float fract = readIndex - (long) readIndex; // decimal residual
     int readIndexInt = std::floor(readIndex); // integer residual
-    if (lastIndex == 0) {
-        int a = 0;
-    }
     readIndexInt %= size(); // overflow wrapping
     int nextRead = (readIndexInt + 1) % size(); // second value used for interpolation
     float interpolatedValue = utils::interpolate(delayBuffer.getSample(channel, readIndexInt),
             delayBuffer.getSample(channel, nextRead), fract);
+
+    //printf("%d - %d - %d - %10.3f\n", lastIndex[channel], size(), readIndexInt);
+
     return interpolatedValue;
 
 }
