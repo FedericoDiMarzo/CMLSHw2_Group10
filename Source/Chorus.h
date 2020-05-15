@@ -70,13 +70,13 @@ private:
     std::vector<std::unique_ptr<MorphingLfo>> lfoPool;
 
     // control rate
-    int lfoSubRate = 2000;
+    int lfoSubRate = 10000;
 
     // counter used to trigger the control update
     int lfoCounter = 0;
 
     // mix between dry and effected signal
-    float wet = 0.8;
+    float wet = 1;
 
     // feedback of the delays
     float feedback = 0;

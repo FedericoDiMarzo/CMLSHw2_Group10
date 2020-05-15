@@ -13,8 +13,7 @@
 #include <memory>
 
 
-Chorus::Chorus()
- {
+Chorus::Chorus() {
     for (int i = 0; i < 4; i++) {
         // pushing all the delay lines
         delayLines.push_back(std::make_unique<Delay>());
@@ -30,20 +29,20 @@ Chorus::Chorus()
         // pushing the buffers
         bufferPool.push_back(std::make_unique<AudioBuffer<float>>());
     }
+    setDelay(0.2);
 }
 
 Chorus::~Chorus() {}
 
 void Chorus::setDelay(int delayIndex, float delayTime) noexcept {
-    for (int i = 0; i < delaysForChannel; i++) {
-        int index = delayIndex * delaysForChannel + i;
-        delayLines[index]->setDelay(delayTime);
-    }
+    delayLines[delayIndex]->setDelay(delayTime);
+
 }
 
 void Chorus::setDelay(float delayTime) noexcept {
-    setDelay(0, delayTime);
-    setDelay(1, delayTime);
+    for (int i = 0; i < delayLines.size(); i++) {
+        setDelay(i, delayTime);
+    }
 }
 
 
@@ -98,8 +97,7 @@ void Chorus::releaseResources() {
 
 void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept {
     int numberOfSamples = buffer.getNumSamples();
-
-    for (int sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++) {
+    /*for (int sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++) {
         int increment = jmin(numberOfSamples - sampleIndex, lfoSubRate - lfoCounter);
         bufferPool[2]->copyFrom(0, 0, buffer, 0, sampleIndex, increment);
         bufferPool[2]->copyFrom(1, 0, buffer, 1, sampleIndex, increment);
@@ -111,50 +109,46 @@ void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) 
 
         // control rate processing
         if (lfoCounter == lfoSubRate) {
-        lfoCounter = 0;
-        //applyLfo();
+            lfoCounter = 0;
+            //applyLfo();
         }
-    }
+    }*/
 
-    //_processBlock(buffer, midiMessages, numberOfSamples);
+    _processBlock(buffer, midiMessages, numberOfSamples);
 
 }
 
 void Chorus::_processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, int numberOfSamples) noexcept {
-    //bool monoToStereo = false;
-    bufferPool[1]->clear(0, numberOfSamples); // clearing the wet accumulation buffer
 
-    // iterating per channel
-    for (int channel = 0; channel < buffer.getNumChannels(); ++channel) {
+    for (int channel = 0; channel < buffer.getNumChannels(); channel++) {
+        // copy of the input
+        bufferPool[0]->copyFrom(0, 0, buffer, channel, 0, numberOfSamples);
+
+        // resetting the wet buffer
+        bufferPool[1]->clear(0, 0, numberOfSamples);
+
+        // iterating for the number of delays of each channel
         for (int i = 0; i < delaysForChannel; i++) {
+            // actual index for delayLines
+            int delayIndex = i + channel * delaysForChannel;
 
-            // obtaining the index for delayLines
-            int index = i + delaysForChannel * channel;
+            // processing bufferPool[0]
+            delayLines[delayIndex]->processBlock(*bufferPool[0], midiMessages, numberOfSamples);
 
-            // copying the input buffer in bufferPool[0]
-            bufferPool[0]->copyFrom(0, 0, buffer,
-                                   channel, 0, numberOfSamples);
-
-            // processing
-            delayLines[index]->processBlock(*bufferPool[0], midiMessages, numberOfSamples);
-
-            // accumulating the output of the delay lines
+            // adding bufferPool[0] to bufferPool[1]
+            float delayGain = 1.0f / static_cast<float>(delaysForChannel);
             bufferPool[1]->addFrom(0, 0, *bufferPool[0],
-                                  0, 0, numberOfSamples);
-
+                    0, 0, numberOfSamples, delayGain);
         }
 
-        // scaling the wet based on the number of delays
-        bufferPool[1]->applyGain(1.0 / delaysForChannel * wet);
+        // scaling the input based on wet
+        buffer.applyGain(channel, 0, numberOfSamples, (1-wet));
 
-        // scaling the dry signal
-        //buffer.applyGain(1-wet);
-
-        // summing dry and wet signals
+        // adding the wet signal
         buffer.addFrom(channel, 0, *bufferPool[1],
-                       0, 0, numberOfSamples);
-
+                0, 0, numberOfSamples, wet);
     }
+
 }
 
 

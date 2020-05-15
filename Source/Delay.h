@@ -47,14 +47,14 @@ public:
      * Write a new sample in the circular buffer.
      * @param sample
      */
-    void writeNewSample(float sample) noexcept;
+    void writeNewSample(int channel, float sample) noexcept;
 
     /**
      * Read a sample based on the delay time.
      * Implements a linear interpolation.
      * @return delayed sample
      */
-    float readSample() noexcept;
+    float readSample(int channel) noexcept;
 
     static const float MAX_DELAY;
 
@@ -68,7 +68,7 @@ private:
     /**
      * @return size of the buffer.
      */
-    size_t size();
+    int size();
 
     /**
      * Sets the buffer size.
@@ -82,7 +82,8 @@ private:
     void clear();
 
     // circular buffer
-    std::vector<float> delayBuffer;
+    //std::vector<float> delayBuffer;
+    AudioBuffer<float> delayBuffer;
 
     // index for the circular buffer
     int lastIndex = 0;
