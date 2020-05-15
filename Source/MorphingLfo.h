@@ -39,5 +39,6 @@ private:
     float frequency = 2.0; // Hz
     float shapeIndex = 0; // [0, 1]
     double sampleRate = 0;
+    int tableResolution = 0;
 
 };

@@ -5,6 +5,7 @@
 #include <vector>
 #include <JuceHeader.h>
 #include "ProcessorTemplate.h"
+#include "MorphingLfo.h"
 
 /**
  * Feedback delay implementation.
@@ -18,7 +19,7 @@ public:
      * Sets the delay time in seconds.
      * @param delayTime
      */
-    void setDelay(float delayTime) noexcept { this->delayTime = delayTime; } // TODO: check MAX_DELAY
+    void setDelay(float delayTime) noexcept { this->delayTime = delayTime; }
 
     /**
      * @return delay time in seconds.
@@ -36,6 +37,8 @@ public:
      * @param feedback
      */
     void setFeedback(float feedback) { this->feedback = feedback; }
+
+    void setLfoSpeed(float frequency);
 
     /**
      * Sets the current sample rate.
@@ -59,10 +62,13 @@ public:
     static const float MAX_DELAY;
 
     //==============================================================================
+
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept override;
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, int numberOfSamples) noexcept;
+
+
 
 private:
     /**
@@ -81,15 +87,16 @@ private:
      */
     void clear();
 
+    void applyLfo() noexcept ;
+
     // circular buffer
-    //std::vector<float> delayBuffer;
     AudioBuffer<float> delayBuffer;
 
     // index for the circular buffer
     int lastIndex[2];
 
     // delay time in seconds
-    float delayTime = 0.4;
+    float delayTime = 0.03;
 
     // used for mixing the signal
     float wet = 1;
@@ -99,4 +106,11 @@ private:
 
     // current sample rate
     float sampleRate = 0;
+
+    // lfo
+    MorphingLfo lfo;
+
+    // lfo intensity over the delayTime
+    float lfoIntensity = 0.0000001;
+
 };

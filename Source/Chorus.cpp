@@ -14,22 +14,23 @@
 
 
 Chorus::Chorus() {
+
+    // pushing all the delay lines
     for (int i = 0; i < 4; i++) {
-        // pushing all the delay lines
         delayLines.push_back(std::make_unique<Delay>());
-        float rand = (Random::getSystemRandom().nextFloat() - 0.5f) * 0.1f;
-        //delayLines[i]->setDelay(delayLines[i]->getDelayTime() + rand);
+        float rand = (Random::getSystemRandom().nextFloat() - 0.5f);
+        delayLines[i]->setDelay(delayLines[i]->getDelayTime());
         delayLines[i]->setWet(1);
         delayLines[i]->setFeedback(feedback);
+        delayLines[i]->setLfoSpeed(3 + rand);
 
-        // pushing the lfo
-        lfoPool.push_back(std::make_unique<MorphingLfo>(1, 1024));
-        lfoPool[i]->setFrequency(lfoPool[i]->getFrequency() + rand * 0.8);
+    }
 
-        // pushing the buffers
+
+    // pushing the buffers
+    for (int i = 0; i < 3; i++) {
         bufferPool.push_back(std::make_unique<AudioBuffer<float>>());
     }
-    setDelay(0.2);
 }
 
 Chorus::~Chorus() {}
@@ -97,7 +98,7 @@ void Chorus::releaseResources() {
 
 void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept {
     int numberOfSamples = buffer.getNumSamples();
-    /*for (int sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++) {
+/*    for (int sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++) {
         int increment = jmin(numberOfSamples - sampleIndex, lfoSubRate - lfoCounter);
         bufferPool[2]->copyFrom(0, 0, buffer, 0, sampleIndex, increment);
         bufferPool[2]->copyFrom(1, 0, buffer, 1, sampleIndex, increment);
@@ -110,7 +111,7 @@ void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) 
         // control rate processing
         if (lfoCounter == lfoSubRate) {
             lfoCounter = 0;
-            //applyLfo();
+            applyLfo();
         }
     }*/
 
@@ -140,6 +141,7 @@ void Chorus::_processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages,
             bufferPool[1]->addFrom(0, 0, *bufferPool[0],
                     0, 0, numberOfSamples, delayGain);
         }
+
 
         // scaling the input based on wet
         buffer.applyGain(channel, 0, numberOfSamples, (1-wet));

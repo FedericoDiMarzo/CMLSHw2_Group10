@@ -11,9 +11,13 @@
 #include "Delay.h"
 #include "Utils.h"
 
-const float Delay::MAX_DELAY = 5; // in seconds
+const float Delay::MAX_DELAY = 10; // in seconds
 
-Delay::Delay() {}
+Delay::Delay()
+        :
+        lfo(1, 1024) {
+    setLfoSpeed(3.0);
+}
 
 Delay::~Delay() {}
 
@@ -22,7 +26,7 @@ int Delay::size() {
 }
 
 void Delay::setSize(size_t size) {
-    delayBuffer.setSize(2, size);
+    delayBuffer.setSize(2, static_cast<int>(size));
 }
 
 void Delay::clear() {
@@ -31,6 +35,17 @@ void Delay::clear() {
     lastIndex[1] = 0;
 }
 
+void Delay::setLfoSpeed(float frequency) {
+    lfo.setFrequency(frequency);
+}
+
+
+void Delay::applyLfo() noexcept {
+    float lfoValue = lfo.getNextValue();
+    float delayDelta = jmap(lfoValue, -1.0f, 1.0f,
+                            -lfoIntensity, lfoIntensity);
+    setDelay(delayTime + delayDelta);
+}
 
 void Delay::writeNewSample(int channel, float sample) noexcept {
     // avoid zero divisions
@@ -61,7 +76,7 @@ float Delay::readSample(int channel) noexcept {
     readIndexInt %= size(); // overflow wrapping
     int nextRead = (readIndexInt + 1) % size(); // second value used for interpolation
     float interpolatedValue = utils::interpolate(delayBuffer.getSample(channel, readIndexInt),
-            delayBuffer.getSample(channel, nextRead), fract);
+                                                 delayBuffer.getSample(channel, nextRead), fract);
 
     //printf("%d - %d - %d - %10.3f\n", lastIndex[channel], size(), readIndexInt);
 
@@ -69,14 +84,19 @@ float Delay::readSample(int channel) noexcept {
 
 }
 
+
+//==============================================================================
+
 void Delay::prepareToPlay(double sampleRate, int samplesPerBlock) {
     clear();
     setSampleRate(sampleRate);
     setSize(std::ceil(MAX_DELAY * sampleRate));
+    lfo.prepareToPlay(sampleRate, samplesPerBlock);
 }
 
 void Delay::releaseResources() {
     clear();
+    lfo.releaseResources();
 }
 
 void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, int numberOfSamples) noexcept {
@@ -88,8 +108,9 @@ void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, i
             float inputBufferSample = buffer.getSample(channel, sampleIndex);
             float delayedSample = readSample(channel);
             float newSample = wet * delayedSample + (1 - wet) * inputBufferSample;
-            writeNewSample(channel, (1 - feedback) * inputBufferSample + feedback * delayedSample);
+            writeNewSample(channel,  inputBufferSample + feedback * delayedSample);
             buffer.setSample(channel, sampleIndex, newSample);
+            applyLfo();
         }
     }
 }

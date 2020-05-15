@@ -76,10 +76,10 @@ private:
     int lfoCounter = 0;
 
     // mix between dry and effected signal
-    float wet = 1;
+    float wet = 0.4;
 
     // feedback of the delays
-    float feedback = 0;
+    float feedback = 0.2;
 
     // current sample rate
     float sampleRate = 0;
