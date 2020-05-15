@@ -62,6 +62,7 @@ public:
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept override;
+    void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, int numberOfSamples) noexcept;
 
 private:
     /**
@@ -87,7 +88,7 @@ private:
     int lastIndex = 0;
 
     // delay time in seconds
-    float delayTime = 0.2;
+    float delayTime = 0.4;
 
     // used for mixing the signal
     float wet = 1;

@@ -53,7 +53,7 @@ private:
      * @param buffer
      * @param midiMessages
      */
-    void _processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept;
+    void _processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, int numberOfSamples) noexcept;
 
     //==============================================================================
 
@@ -69,14 +69,8 @@ private:
     // lfo used for modulating the delay time of the delay lines
     std::vector<std::unique_ptr<MorphingLfo>> lfoPool;
 
-    // block of audio used for processing sub blocks
-    std::unique_ptr<dsp::AudioBlock<float>> tmpAudioBlock;
-
-    // heap memory reserved for tmpAudioBlock
-    HeapBlock<char> heapBlock;
-
     // control rate
-    int lfoSubRate = 100;
+    int lfoSubRate = 2000;
 
     // counter used to trigger the control update
     int lfoCounter = 0;

@@ -21,9 +21,10 @@ Chorus::Chorus()
         float rand = (Random::getSystemRandom().nextFloat() - 0.5f) * 0.1f;
         delayLines[i]->setDelay(delayLines[i]->getDelayTime() + rand);
         delayLines[i]->setWet(1);
+        delayLines[i]->setFeedback(feedback);
 
         // pushing the lfo
-        lfoPool.push_back(std::unique_ptr<MorphingLfo>(new MorphingLfo(1, 1024)));
+        lfoPool.push_back(std::make_unique<MorphingLfo>(1, 1024));
         lfoPool[i]->setFrequency(lfoPool[i]->getFrequency() + rand * 0.8);
 
         // pushing the buffers
@@ -47,7 +48,6 @@ void Chorus::setDelay(float delayTime) noexcept {
 
 
 void Chorus::applyLfo() noexcept {
-    lfoCounter = 0;
     for (int lfoIndex = 0; lfoIndex < 2 * delaysForChannel; lfoIndex++) {
         float lfoValue = lfoPool[lfoIndex]->getNextValue();
         float delayDelta = jmap(lfoValue, -1.0f, 1.0f, -0.1f, 0.1f);
@@ -79,8 +79,6 @@ void Chorus::prepareToPlay(double sampleRate, int samplesPerBlock) {
     for (auto &lfo : lfoPool) {
         lfo->prepareToPlay(sampleRate / lfoSubRate, samplesPerBlock);
     }
-
-    tmpAudioBlock = std::make_unique<dsp::AudioBlock<float>>(heapBlock, 2, samplesPerBlock);
 }
 
 void Chorus::releaseResources() {
@@ -99,32 +97,32 @@ void Chorus::releaseResources() {
 }
 
 void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept {
-    /*int numberOfSamples = buffer.getNumSamples();
-
-    auto audioBlock = tmpAudioBlock->getSubBlock(0, buffer.getNumSamples());
-    audioBlock.copyFrom(buffer, 0, 0, numberOfSamples);
+    int numberOfSamples = buffer.getNumSamples();
 
     for (int sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++) {
         int increment = jmin(numberOfSamples - sampleIndex, lfoSubRate - lfoCounter);
-        auto subBlock = audioBlock.getSubBlock(sampleIndex, increment);
-        bufferPool[3]->copyFrom(0, 0, subBlock.getChannelPointer(0), static_cast<int>(subBlock.getNumSamples()));
-        bufferPool[3]->copyFrom(1, 0, subBlock.getChannelPointer(1), static_cast<int>(subBlock.getNumSamples()));
-        _processBlock(*bufferPool[3], midiMessages);
+        bufferPool[2]->copyFrom(0, 0, buffer, 0, sampleIndex, increment);
+        bufferPool[2]->copyFrom(1, 0, buffer, 1, sampleIndex, increment);
+        _processBlock(*bufferPool[2], midiMessages, increment);
+        buffer.copyFrom(0, sampleIndex, *bufferPool[2], 0, 0, increment);
+        buffer.copyFrom(1, sampleIndex, *bufferPool[2], 1, 0, increment);
         sampleIndex += increment;
         lfoCounter += increment;
 
         // control rate processing
         if (lfoCounter == lfoSubRate) {
-            applyLfo();
+        lfoCounter = 0;
+        //applyLfo();
         }
-    }*/
-    _processBlock(buffer, midiMessages);
+    }
+
+    //_processBlock(buffer, midiMessages, numberOfSamples);
 
 }
 
-void Chorus::_processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept {
+void Chorus::_processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, int numberOfSamples) noexcept {
     //bool monoToStereo = false;
-    bufferPool[1]->clear(); // clearing the wet accumulation buffer
+    bufferPool[1]->clear(0, numberOfSamples); // clearing the wet accumulation buffer
 
     // iterating per channel
     for (int channel = 0; channel < buffer.getNumChannels(); ++channel) {
@@ -135,14 +133,14 @@ void Chorus::_processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages)
 
             // copying the input buffer in bufferPool[0]
             bufferPool[0]->copyFrom(0, 0, buffer,
-                                   channel, 0, buffer.getNumSamples());
+                                   channel, 0, numberOfSamples);
 
             // processing
-            delayLines[index]->processBlock(*bufferPool[0], midiMessages);
+            delayLines[index]->processBlock(*bufferPool[0], midiMessages, numberOfSamples);
 
             // accumulating the output of the delay lines
             bufferPool[1]->addFrom(0, 0, *bufferPool[0],
-                                  0, 0, buffer.getNumSamples());
+                                  0, 0, numberOfSamples);
 
         }
 
@@ -154,7 +152,7 @@ void Chorus::_processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages)
 
         // summing dry and wet signals
         buffer.addFrom(channel, 0, *bufferPool[1],
-                       0, 0, buffer.getNumSamples());
+                       0, 0, numberOfSamples);
 
     }
 }

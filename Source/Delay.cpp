@@ -71,11 +71,11 @@ void Delay::releaseResources() {
     clear();
 }
 
-void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept {
+void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, int numberOfSamples) noexcept {
 
     // iterating per channel
     for (int channel = 0; channel < buffer.getNumChannels(); ++channel) {
-        for (int sampleIndex = 0; sampleIndex < buffer.getNumSamples(); sampleIndex++) {
+        for (int sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++) {
             // processing
             float inputBufferSample = buffer.getSample(channel, sampleIndex);
             float delayedSample = readSample();
@@ -84,6 +84,10 @@ void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) n
             buffer.setSample(channel, sampleIndex, newSample);
         }
     }
+}
+
+void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept {
+    processBlock(buffer, midiMessages, buffer.getNumSamples());
 }
 
 
