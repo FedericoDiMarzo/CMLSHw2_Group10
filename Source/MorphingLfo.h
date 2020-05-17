@@ -15,14 +15,12 @@
 
 class MorphingLfo : public ProcessorTemplate {
 public:
-    MorphingLfo(int morphingSteps, int tableResolution);
+    MorphingLfo(int tableResolution);
     virtual ~MorphingLfo();
 
     void setFrequency(float frequency);
 
     float getFrequency() { return frequency; }
-
-    void setShapeIndex(float shapeIndex) { this->shapeIndex = shapeIndex; }
 
     float getNextValue();
     //==============================================================================
@@ -34,11 +32,16 @@ public:
 
 
 private:
-    // vector of lfo
-    std::vector<std::unique_ptr<dsp::Oscillator<float>>> lfoPool;
+    // actual lfo used
+    dsp::Oscillator<float> lfo;
+
+    // frequency of the lfo
     float frequency = 2.0; // Hz
-    float shapeIndex = 0; // [0, 1]
+
+    // current sample rate
     double sampleRate = 0;
+
+    // resolution of the lookup table
     int tableResolution = 0;
 
 };

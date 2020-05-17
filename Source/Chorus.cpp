@@ -10,22 +10,25 @@
 
 #include "Chorus.h"
 
-#include <memory>
-
 
 Chorus::Chorus() {
-
-    // pushing all the delay lines
-    for (int i = 0; i < 4; i++) {
+    // pushing the short delay lines
+    for (int i = 0; i < delaysForChannel * 2; i++) {
         delayLines.push_back(std::make_unique<Delay>());
         float rand = (Random::getSystemRandom().nextFloat() - 0.5f);
         delayLines[i]->setDelay(delayLines[i]->getDelayTime());
         delayLines[i]->setWet(1);
-        delayLines[i]->setFeedback(feedback);
-        delayLines[i]->setLfoSpeed(3 + rand);
-
+        delayLines[i]->setFeedback(0);
+        delayLines[i]->setLfoSpeed(3.0f + rand * 0.2f);
     }
 
+    // pushing the blur delay lines
+    for (int i = 0; i < 2; i++) {
+        blurDelays.push_back(std::make_unique<Delay>());
+        delayLines[i]->setDelay(blurDelaysDelayTime);
+        delayLines[i]->setWet(blurMix);
+        delayLines[i]->setFeedback(blurFeedback);
+    }
 
     // pushing the buffers
     for (int i = 0; i < 3; i++) {
@@ -37,7 +40,6 @@ Chorus::~Chorus() {}
 
 void Chorus::setDelay(int delayIndex, float delayTime) noexcept {
     delayLines[delayIndex]->setDelay(delayTime);
-
 }
 
 void Chorus::setDelay(float delayTime) noexcept {
@@ -46,20 +48,48 @@ void Chorus::setDelay(float delayTime) noexcept {
     }
 }
 
+void Chorus::setWet(float wet) {
+    jassert(wet >= 0);
+    jassert(wet <= 1);
+    this->wet = wet;
+}
 
-void Chorus::applyLfo() noexcept {
-    for (int lfoIndex = 0; lfoIndex < 2 * delaysForChannel; lfoIndex++) {
-        float lfoValue = lfoPool[lfoIndex]->getNextValue();
-        float delayDelta = jmap(lfoValue, -1.0f, 1.0f, -0.1f, 0.1f);
-        delayLines[lfoIndex]->setDelay(delayLines[lfoIndex]->getDelayTime() + delayDelta);
+void Chorus::setBlurMix(float blurMix) {
+    jassert(wet >= 0);
+    jassert(wet <= 1);
+    this->blurMix = blurMix;
+}
+
+void Chorus::setBlurFeedback(float blurFeedback) {
+    jassert(wet >= 0);
+    jassert(wet < 1);
+    this->blurFeedback = blurFeedback;
+}
+
+void Chorus::setLfoRate(float frequency) {
+    float randScale = 0.3;
+    jassert(frequency - randScale > 0);
+    for (int i = 0; i < delaysForChannel * 2; i++) {
+        float rand = (Random::getSystemRandom().nextFloat() - 0.5f);
+
+        delayLines[i]->setLfoSpeed(3 + rand * randScale);
     }
+}
+
+void Chorus::setStereoEnhance(float stereoEnhance) {
+    jassert(stereoEnhance >= 0);
+    this->stereoEnhance = stereoEnhance;
+}
+
+void Chorus::setIntensity(float intensity) {
+    jassert(intensity >= 0);
+    this->intensity = intensity;
 }
 
 //==============================================================================
 
 void Chorus::prepareToPlay(double sampleRate, int samplesPerBlock) {
     this->sampleRate = sampleRate;
-    lfoCounter = 0;
 
     for (auto &delay: delayLines) {
         delay->prepareToPlay(sampleRate, samplesPerBlock);
@@ -75,10 +105,6 @@ void Chorus::prepareToPlay(double sampleRate, int samplesPerBlock) {
         }
         bufferPool[i]->clear();
     }
-
-    for (auto &lfo : lfoPool) {
-        lfo->prepareToPlay(sampleRate / lfoSubRate, samplesPerBlock);
-    }
 }
 
 void Chorus::releaseResources() {
@@ -90,37 +116,12 @@ void Chorus::releaseResources() {
         // clearing all the parallel buffers
         buff->clear();
     }
-
-    for (auto &lfo : lfoPool) {
-        lfo->releaseResources();
-    }
 }
+
 
 void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept {
+
     int numberOfSamples = buffer.getNumSamples();
-/*    for (int sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++) {
-        int increment = jmin(numberOfSamples - sampleIndex, lfoSubRate - lfoCounter);
-        bufferPool[2]->copyFrom(0, 0, buffer, 0, sampleIndex, increment);
-        bufferPool[2]->copyFrom(1, 0, buffer, 1, sampleIndex, increment);
-        _processBlock(*bufferPool[2], midiMessages, increment);
-        buffer.copyFrom(0, sampleIndex, *bufferPool[2], 0, 0, increment);
-        buffer.copyFrom(1, sampleIndex, *bufferPool[2], 1, 0, increment);
-        sampleIndex += increment;
-        lfoCounter += increment;
-
-        // control rate processing
-        if (lfoCounter == lfoSubRate) {
-            lfoCounter = 0;
-            applyLfo();
-        }
-    }*/
-
-    _processBlock(buffer, midiMessages, numberOfSamples);
-
-}
-
-void Chorus::_processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, int numberOfSamples) noexcept {
-
     for (int channel = 0; channel < buffer.getNumChannels(); channel++) {
         // copy of the input
         bufferPool[0]->copyFrom(0, 0, buffer, channel, 0, numberOfSamples);
@@ -136,22 +137,36 @@ void Chorus::_processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages,
             // processing bufferPool[0]
             delayLines[delayIndex]->processBlock(*bufferPool[0], midiMessages, numberOfSamples);
 
-            // adding bufferPool[0] to bufferPool[1]
+            // the intensity parameter influences the second delay
             float delayGain = 1.0f / static_cast<float>(delaysForChannel);
+            delayGain = (i == 2) ? delayGain * intensity : delayGain;
+
+            // adding bufferPool[0] to bufferPool[1]
             bufferPool[1]->addFrom(0, 0, *bufferPool[0],
-                    0, 0, numberOfSamples, delayGain);
+                                   0, 0, numberOfSamples, delayGain);
         }
 
 
         // scaling the input based on wet
-        buffer.applyGain(channel, 0, numberOfSamples, (1-wet));
+        buffer.applyGain(channel, 0, numberOfSamples, (1 - wet));
 
         // adding the wet signal
         buffer.addFrom(channel, 0, *bufferPool[1],
-                0, 0, numberOfSamples, wet);
+                       0, 0, numberOfSamples, wet);
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 

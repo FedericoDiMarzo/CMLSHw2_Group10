@@ -15,10 +15,8 @@
 
 
 //==============================================================================
-/**
-*/
-class Cmls_hw2_group10AudioProcessor : public AudioProcessor, private AudioProcessorValueTreeState::Listener
-{
+
+class Cmls_hw2_group10AudioProcessor : public AudioProcessor, private AudioProcessorValueTreeState::Listener {
 public:
     //==============================================================================
     Cmls_hw2_group10AudioProcessor();
@@ -29,11 +27,11 @@ public:
     void releaseResources() override;
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
+    bool isBusesLayoutSupported(const BusesLayout &layouts) const override;
 #endif
-    
+
     //callback function for the parameters
-    void parameterChanged (const String& param, float value) override;
+    void parameterChanged(const String &param, float value) override;
 
     void processBlock(AudioBuffer<float> &, MidiBuffer &) override;
 
@@ -62,27 +60,21 @@ public:
 
 private:
     Chorus chorus;
-    Delay delay;
 
-    std::atomic<float>* intensity  = nullptr;
-
-    std::atomic<float>* rate  = nullptr;
-    std::atomic<float>* shape      = nullptr;
-
-    std::atomic<float>* mix = nullptr;
-    std::atomic<float>* enhance   = nullptr;
+    // GUI parametes
+    std::atomic<float> *intensity = nullptr;
+    std::atomic<float> *rate = nullptr;
+    std::atomic<float> *blur = nullptr;
+    std::atomic<float> *mix = nullptr;
+    std::atomic<float> *enhance = nullptr;
 
 
-    /* oscillator for debug purposes
-    dsp::Oscillator<float> mainOSC;
-    */
-    
     // GUI Editor
     AudioProcessorValueTreeState treeState;
 
     // MAGIC GUI: add this docking station for the GUI
-    foleys::MagicProcessorState magicState { *this, treeState };
-    
+    foleys::MagicProcessorState magicState{*this, treeState};
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Cmls_hw2_group10AudioProcessor)
 };

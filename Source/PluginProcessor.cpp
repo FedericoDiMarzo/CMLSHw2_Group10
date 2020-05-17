@@ -10,92 +10,137 @@
 
 #include "PluginProcessor.h"
 
-//begin GUI Parameters definition
 
-    // Defining a namespace
-namespace IDs
-{
-    static String intensity     { "intensity" };
-    static String mix           { "mix" };
+//==============================================================================
+//==============================================================================
+// GUI
 
-    static String shape     { "shape" }; 
-    static String rate      { "rate" }; //frequency of the LFO
-    
-    static String enhance   { "enchance"};
+/**
+ * Namespace used for the parameters of the GUI.
+ */
+namespace IDs {
+    static String intensity{"intensity"};
+    static String mix{"mix"};
+
+    static String blur{"blur"};
+    static String rate{"rate"};
+
+    static String enhance{"enhance"};
 }
 
-    //layout creator
-AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
-{
+/**
+ * Used to create the layout.
+ */
+AudioProcessorValueTreeState::ParameterLayout createParameterLayout() {
     AudioProcessorValueTreeState::ParameterLayout layout;
 
     // TODO: set the correct limits for the parameters
 
-// clustering the parameters into groups
+    // clustering the parameters into groups
 
     // central big knob
     auto big_knob = std::make_unique<AudioProcessorParameterGroup>("big_knob", TRANS ("BIG KNOB"), "|");
 
-    big_knob->addChild(std::make_unique<AudioParameterFloat>(IDs::intensity, "Intensity", NormalisableRange<float>(0.0f, 1.0f), 0.7f));
-                          
+    big_knob->addChild(
+            std::make_unique<AudioParameterFloat>(IDs::intensity, "Intensity", NormalisableRange<float>(0.0f, 1.0f),
+                                                  0.7f));
+
 
     // lfo group
     auto lfo = std::make_unique<AudioProcessorParameterGroup>("lfo", TRANS ("LFO"), "|");
 
-    lfo->addChild (std::make_unique<AudioParameterFloat>(IDs::shape, "Shape", NormalisableRange<float>(0.0f, 1.0f), 0.0f),
-                   std::make_unique<AudioParameterFloat>(IDs::rate, "Rate", NormalisableRange<float>(50.0f, 1000.0f), 0.0f));
+    lfo->addChild(std::make_unique<AudioParameterFloat>(IDs::blur, "Blur", NormalisableRange<float>(0.0f, 1.0f), 0.0f),
+                  std::make_unique<AudioParameterFloat>(IDs::rate, "Rate", NormalisableRange<float>(0.0f, 1.0f), 0.5f));
 
- 
+
     // utility group
     auto utility = std::make_unique<AudioProcessorParameterGroup>("utility", TRANS ("UTILITY"), "|");
 
-    utility->addChild(std::make_unique<AudioParameterFloat>(IDs::enhance, "Enhance", NormalisableRange<float>(0.0f,1.0f),0.0f),
-                      std::make_unique<AudioParameterFloat>(IDs::mix, "Mix", NormalisableRange<float>(0.0f, 1.0f), 1.0f));
-                  
-                   
-    layout.add (std::move (big_knob),
-                std::move (lfo),
-                std::move (utility));
-                
+    utility->addChild(
+            std::make_unique<AudioParameterFloat>(IDs::enhance, "Enhance", NormalisableRange<float>(0.0f, 1.0f), 0.0f),
+            std::make_unique<AudioParameterFloat>(IDs::mix, "Mix", NormalisableRange<float>(0.0f, 1.0f), 0.5f));
+
+
+    layout.add(std::move(big_knob),
+               std::move(lfo),
+               std::move(utility));
+
     return layout;
 }//end GUI Parameters definition
 
+/**
+ * Function triggered on parameter change.
+ *
+ * @param param identifier
+ * @param value
+ */
+void Cmls_hw2_group10AudioProcessor::parameterChanged(const String &param, float value) {
+}
+
+
+AudioProcessorEditor *Cmls_hw2_group10AudioProcessor::createEditor() {
+    //return new foleys::MagicPluginEditor(magicState, BinaryData::scheme_debug_xml, BinaryData::scheme_debug_xmlSize);
+    return nullptr; // TODO: magicplugineditor
+}
+
+bool Cmls_hw2_group10AudioProcessor::hasEditor() const {
+    return true; // (change this to false if you choose to not supply an editor)
+}
+
+
+void Cmls_hw2_group10AudioProcessor::getStateInformation(MemoryBlock &destData) {
+    // You should use this method to store your parameters in the memory block.
+    // You could do that either as raw data, or use the XML or ValueTree classes
+    // as intermediaries to make it easy to save and load complex data.
+    magicState.getStateInformation(destData);
+}
+
+void Cmls_hw2_group10AudioProcessor::setStateInformation(const void *data, int sizeInBytes) {
+    // You should use this method to restore your parameters from this memory block,
+    // whose contents will have been created by the getStateInformation() call.
+    magicState.setStateInformation(data, sizeInBytes, getActiveEditor());
+}
 
 //==============================================================================
+//==============================================================================
+// Constructor, destructor
+
+
 Cmls_hw2_group10AudioProcessor::Cmls_hw2_group10AudioProcessor()
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-: AudioProcessor (BusesProperties()
-#if ! JucePlugin_IsMidiEffect
-#if ! JucePlugin_IsSynth
-                  .withInput  ("Input",  AudioChannelSet::stereo(), true)
+        :
+        AudioProcessor(BusesProperties()
+#if !JucePlugin_IsMidiEffect
+#if !JucePlugin_IsSynth
+                               .withInput("Input", AudioChannelSet::stereo(), true)
 #endif
-                  .withOutput ("Output", AudioChannelSet::stereo(), true)
+                               .withOutput("Output", AudioChannelSet::stereo(), true)
 #endif
-                  ),
+        ),
 #endif
 
 
-//add Listener for the parameters
-    treeState (*this, nullptr, "PARAMETERS", createParameterLayout())
-{
+        //add Listener for the parameters
+        treeState(*this, nullptr, "PARAMETERS", createParameterLayout()) {
     // big knob parameter
-    intensity = treeState.getRawParameterValue (IDs::intensity);
+    intensity = treeState.getRawParameterValue(IDs::intensity);
     jassert (intensity != nullptr);
 
 
     // lfo group parameters
-    treeState.addParameterListener (IDs::shape, this);
-    
-    rate = treeState.getRawParameterValue (IDs::rate);
+    blur = treeState.getRawParameterValue(IDs::blur);
+    jassert(blur != nullptr);
+
+    rate = treeState.getRawParameterValue(IDs::rate);
     jassert (rate != nullptr);
-    
+
 
     // utility group parameters   
     mix = treeState.getRawParameterValue(IDs::mix);
     jassert(mix != nullptr);
 
-    enhance = treeState.getRawParameterValue (IDs::enhance);
+    enhance = treeState.getRawParameterValue(IDs::enhance);
     jassert (enhance != nullptr);
 }
 
@@ -103,7 +148,45 @@ Cmls_hw2_group10AudioProcessor::Cmls_hw2_group10AudioProcessor()
 Cmls_hw2_group10AudioProcessor::~Cmls_hw2_group10AudioProcessor() {
 }
 
+
 //==============================================================================
+//==============================================================================
+// AudioProcessor main functions
+
+void Cmls_hw2_group10AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
+    chorus.prepareToPlay(sampleRate, samplesPerBlock);
+}
+
+
+void Cmls_hw2_group10AudioProcessor::releaseResources() {
+    chorus.releaseResources();
+    //delay.releaseResources();
+}
+
+void Cmls_hw2_group10AudioProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
+    ScopedNoDenormals noDenormals;
+    auto totalNumInputChannels = getTotalNumInputChannels();
+    auto totalNumOutputChannels = getTotalNumOutputChannels();
+
+    // In case we have more outputs than inputs, this code clears any output
+    // channels that didn't contain input data, (because these aren't
+    // guaranteed to be empty - they may contain garbage).
+    // This is here to avoid people getting screaming feedback
+    // when they first compile a plugin, but obviously you don't need to keep
+    // this code if your algorithm always overwrites all the output channels.
+    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        buffer.clear(i, 0, buffer.getNumSamples());
+
+
+    chorus.processBlock(buffer, midiMessages);
+    buffer.applyGain(1.5);
+    //delay.processBlock(buffer, midiMessages);
+}
+
+//==============================================================================
+//==============================================================================
+
+
 const String Cmls_hw2_group10AudioProcessor::getName() const {
     return JucePlugin_Name;
 }
@@ -155,47 +238,10 @@ const String Cmls_hw2_group10AudioProcessor::getProgramName(int index) {
 void Cmls_hw2_group10AudioProcessor::changeProgramName(int index, const String &newName) {
 }
 
-//==============================================================================
-
-
-     
-void Cmls_hw2_group10AudioProcessor::parameterChanged (const String& param, float value){
-}
-
-//==============================================================================
-//==============================================================================
-
-void Cmls_hw2_group10AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
-  /* oscillator - for debug purposes
-
-    const auto numChannels = getTotalNumOutputChannels();
-  
-    mainOSC.initialise([](auto in) { return std::sin(in); });
-    dsp::ProcessSpec spec;
-    spec.sampleRate = sampleRate;
-    spec.maximumBlockSize = uint32(samplesPerBlock);
-    spec.numChannels = uint32(numChannels);
-
-    mainOSC.prepare(spec);
-    */
-
-    chorus.prepareToPlay(sampleRate, samplesPerBlock);
-       
-    //delay.prepareToPlay(sampleRate, samplesPerBlock);
-
-}
-
-//==============================================================================
-//==============================================================================
-
-void Cmls_hw2_group10AudioProcessor::releaseResources() {
-    chorus.releaseResources();
-    //delay.releaseResources();
-}
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool Cmls_hw2_group10AudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
-{
+
+bool Cmls_hw2_group10AudioProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const {
 #if JucePlugin_IsMidiEffect
     ignoreUnused (layouts);
     return true;
@@ -204,14 +250,14 @@ bool Cmls_hw2_group10AudioProcessor::isBusesLayoutSupported (const BusesLayout& 
     // This is the place where you check if the layout is supported.
     // In this template code we only support mono or stereo.
     if (layouts.getMainOutputChannelSet() != AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != AudioChannelSet::stereo())
+        && layouts.getMainOutputChannelSet() != AudioChannelSet::stereo())
         return false;
-    if (layouts.getMainInputChannelSet()  == AudioChannelSet::disabled()
-     || layouts.getMainOutputChannelSet() == AudioChannelSet::disabled())
+    if (layouts.getMainInputChannelSet() == AudioChannelSet::disabled()
+        || layouts.getMainOutputChannelSet() == AudioChannelSet::disabled())
         return false;
 
     // This checks if the input layout matches the output layout
-#if ! JucePlugin_IsSynth
+#if !JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
 #endif
@@ -219,69 +265,10 @@ bool Cmls_hw2_group10AudioProcessor::isBusesLayoutSupported (const BusesLayout& 
     return true;
 #endif
 }
+
 #endif
 
-void Cmls_hw2_group10AudioProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
-    ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear(i, 0, buffer.getNumSamples());
-
-
-    /* oscillator for debug purposes
-
-    auto* channelData = buffer.getWritePointer(0);
-    for (int i = 0; i < buffer.getNumSamples(); ++i)
-    {
-        mainOSC.setFrequency(rate->load());
-        channelData[i] = jlimit(-1.0f, 1.0f, mainOSC.processSample(0.0f)); 
-            }
-
-    for (int i = 1; i < getTotalNumOutputChannels(); ++i)
-        buffer.copyFrom(i, 0, buffer.getReadPointer(0), buffer.getNumSamples());
-    */
-
-
-
-
-
-    chorus.processBlock(buffer, midiMessages);
-    buffer.applyGain(1.5);
-    //delay.processBlock(buffer, midiMessages);
-}
-
-//==============================================================================
-bool Cmls_hw2_group10AudioProcessor::hasEditor() const {
-    return true; // (change this to false if you choose to not supply an editor)
-}
-
-AudioProcessorEditor *Cmls_hw2_group10AudioProcessor::createEditor() {
-    return new foleys::MagicPluginEditor (magicState);
-}
-
-//==============================================================================
-void Cmls_hw2_group10AudioProcessor::getStateInformation(MemoryBlock &destData) {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
-    magicState.getStateInformation(destData);
-}
-
-void Cmls_hw2_group10AudioProcessor::setStateInformation(const void *data, int sizeInBytes) {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
-    magicState.setStateInformation(data, sizeInBytes, getActiveEditor());
-}
-
-//==============================================================================
 // This creates new instances of the plugin..
 AudioProcessor *JUCE_CALLTYPE createPluginFilter() {
     return new Cmls_hw2_group10AudioProcessor();

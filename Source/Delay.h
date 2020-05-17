@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include <vector>
 #include <JuceHeader.h>
 #include "ProcessorTemplate.h"
 #include "MorphingLfo.h"
+#include "Utils.h"
 
 /**
  * Feedback delay implementation.
@@ -36,9 +36,21 @@ public:
      * Sets the delay feedback.
      * @param feedback
      */
-    void setFeedback(float feedback) { this->feedback = feedback; }
+    void setFeedback(float feedback);
 
+    /**
+     * Sets the speed of the lfo.
+     *
+     * @param frequency
+     */
     void setLfoSpeed(float frequency);
+
+    /**
+     * Sets the intensity of the lfo.
+     *
+     * @param intensity
+     */
+    void setLfoIntensity(float intensity);
 
     /**
      * Sets the current sample rate.
@@ -87,7 +99,11 @@ private:
      */
     void clear();
 
-    void applyLfo() noexcept ;
+    /**
+     * Modulates the delayTime, based on the
+     * lfoIntensity.
+     */
+    void applyLfo() noexcept;
 
     // circular buffer
     AudioBuffer<float> delayBuffer;

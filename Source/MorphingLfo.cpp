@@ -10,28 +10,23 @@
 
 #include "MorphingLfo.h"
 
-MorphingLfo::MorphingLfo(int morphingSteps, int tableResolution) {
+MorphingLfo::MorphingLfo(int tableResolution) {
     this->tableResolution = tableResolution;
-
-    for (int i = 0; i < morphingSteps; i++) {
-        lfoPool.push_back(std::make_unique<dsp::Oscillator<float>>());
-        lfoPool[i]->initialise([](float x) {return std::sin(x);}, tableResolution); // sine lfo
-        lfoPool[i]->setFrequency(frequency);
-    }
+    lfo.initialise([](float x) { return std::sin(x); }, tableResolution); // sine lfo
+    lfo.setFrequency(frequency);
 }
 
 MorphingLfo::~MorphingLfo() {}
 
 float MorphingLfo::getNextValue() {
-    return lfoPool[0]->processSample(0);
+    return lfo.processSample(0);
 }
 
 
 void MorphingLfo::setFrequency(float frequency) {
+    jassert(frequency > 0);
     this->frequency = frequency;
-    for (auto &lfo : lfoPool) {
-        lfo->setFrequency(frequency);
-    }
+    lfo.setFrequency(frequency);
 }
 
 
@@ -40,19 +35,15 @@ void MorphingLfo::setFrequency(float frequency) {
 
 void MorphingLfo::prepareToPlay(double sampleRate, int samplesPerBlock) {
     this->sampleRate = sampleRate;
-    for (auto &lfo : lfoPool) {
-        lfo->prepare({sampleRate, static_cast<uint32>(samplesPerBlock)});
-        int randPhase = Random::getSystemRandom().nextInt(tableResolution);
-        for (int i = 0; i < randPhase; i++) {
-            lfo->processSample(0.0); // random phase initialization
-        }
+    lfo.prepare({sampleRate, static_cast<uint32>(samplesPerBlock)});
+
+    // random phase initialization
+    int randPhase = Random::getSystemRandom().nextInt(tableResolution);
+    for (int i = 0; i < randPhase; i++) {
+        lfo.processSample(0.0);
     }
-
-
 }
 
 void MorphingLfo::releaseResources() {
-    for (auto &lfo : lfoPool) {
-        lfo->reset();
-    }
+    lfo.reset();
 }

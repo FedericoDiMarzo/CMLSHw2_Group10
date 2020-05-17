@@ -1,12 +1,4 @@
-/*
-  ==============================================================================
 
-    Chorus.h
-    Created: 12 May 2020 11:59:22pm
-    Author:  Federico Di Marzo
-
-  ==============================================================================
-*/
 
 #pragma once
 
@@ -14,14 +6,54 @@
 #include "Delay.h"
 #include "MorphingLfo.h"
 #include "ProcessorTemplate.h"
-
-#define NUMBER_OF_DELAYS 2
+//#include "Utils.h"
 
 class Chorus : public ProcessorTemplate {
 public:
     Chorus();
     virtual ~Chorus();
 
+    /**
+     * Sets the mix between dry and effected signal.
+     *
+     * @param wet
+     */
+    void setWet(float wet);
+
+    /**
+     * Sets the mix between the chorus and the blur delays.
+     *
+     * @param blurMix
+     */
+    void setBlurMix(float blurMix);
+
+    /**
+     * Sets the frequency of the delays' lfos.
+     *
+     * @param frequency
+     */
+    void setLfoRate(float frequency);
+
+    /**
+     * Sets the feedback for the blur delays.
+     *
+     * @param blurFeedback
+     */
+    void setBlurFeedback(float blurFeedback);
+
+    /**
+     * Sets the gain of the side channel.
+     *
+     * @param stereoEnhance
+     */
+    void setStereoEnhance(float stereoEnhance);
+
+    /**
+     * Sets the gain of one of the delayLine.
+     *
+     * @param intensity
+     */
+    void setIntensity(float intensity);
 
     //==============================================================================
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -43,22 +75,20 @@ private:
      */
     void setDelay(float delayTime) noexcept;
 
-    /**
-     * Apply the lfo to the delay lines.
-     */
-    void applyLfo() noexcept ;
-
-    /**
-     * Implemented for processing chunks of the buffer.
-     * @param buffer
-     * @param midiMessages
-     */
-    void _processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, int numberOfSamples) noexcept;
 
     //==============================================================================
 
     // delay lines used to implement the chorus
     std::vector<std::unique_ptr<Delay>> delayLines;
+
+    // additional delay lines used for blur knob
+    std::vector<std::unique_ptr<Delay>> blurDelays;
+
+    // delay time for the blur delays
+    float blurDelaysDelayTime = 0.2;
+
+    // blur amount
+    float blurMix = 0;
 
     // number of delay lines for channel
     int delaysForChannel = 2;
@@ -66,21 +96,18 @@ private:
     // temporary buffers used during the processing
     std::vector<std::unique_ptr<AudioBuffer<float>>> bufferPool;
 
-    // lfo used for modulating the delay time of the delay lines
-    std::vector<std::unique_ptr<MorphingLfo>> lfoPool;
-
-    // control rate
-    int lfoSubRate = 10000;
-
-    // counter used to trigger the control update
-    int lfoCounter = 0;
-
     // mix between dry and effected signal
     float wet = 0.4;
 
-    // feedback of the delays
-    float feedback = 0.2;
+    // feedback of the blur delays
+    float blurFeedback = 0;
 
     // current sample rate
     float sampleRate = 0;
+
+    // side channel gain
+    float stereoEnhance = 1;
+
+    // gain of one of the delayLine
+    float intensity = 1;
 };

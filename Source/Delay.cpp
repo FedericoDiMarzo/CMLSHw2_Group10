@@ -1,21 +1,12 @@
-/*
-  ==============================================================================
-
-    Delay.cpp
-    Created: 12 May 2020 5:52:45pm
-    Author:  Federico Di Marzo
-
-  ==============================================================================
-*/
 
 #include "Delay.h"
-#include "Utils.h"
+
 
 const float Delay::MAX_DELAY = 10; // in seconds
 
 Delay::Delay()
         :
-        lfo(1, 1024) {
+        lfo(1024) {
     setLfoSpeed(3.0);
 }
 
@@ -35,23 +26,37 @@ void Delay::clear() {
     lastIndex[1] = 0;
 }
 
+void Delay::setFeedback(float feedback) {
+    jassert(feedback >= 0);
+    jassert(feedback < 1);
+    this->feedback = feedback;
+}
+
 void Delay::setLfoSpeed(float frequency) {
+    jassert(frequency > 0);
     lfo.setFrequency(frequency);
 }
 
+void Delay::setLfoIntensity(float intensity) {
+    jassert(intensity <= 0.0000003);
+    lfoIntensity = intensity;
+}
 
 void Delay::applyLfo() noexcept {
     float lfoValue = lfo.getNextValue();
     float delayDelta = jmap(lfoValue, -1.0f, 1.0f,
                             -lfoIntensity, lfoIntensity);
+
+    jassert(delayTime + delayDelta > 0);
+    jassert(delayTime + delayDelta < MAX_DELAY);
+
     setDelay(delayTime + delayDelta);
 }
 
 void Delay::writeNewSample(int channel, float sample) noexcept {
-    // avoid zero divisions
-    if (size() == 0) {
-        return;
-    }
+    jassert(size() > 0);
+    jassert(channel >= 0);
+    jassert(channel < 2);
 
     // circular wrapping
     delayBuffer.setSample(channel, lastIndex[channel], sample);
@@ -60,10 +65,9 @@ void Delay::writeNewSample(int channel, float sample) noexcept {
 }
 
 float Delay::readSample(int channel) noexcept {
-    // avoids zero divisions
-    if (size() == 0) {
-        return 0;
-    }
+    jassert(size() > 0);
+    jassert(channel >= 0);
+    jassert(channel < 2);
 
     float readIndex = static_cast<float>(lastIndex[channel]) - (delayTime * sampleRate);
     if (readIndex < 0) {
@@ -77,8 +81,6 @@ float Delay::readSample(int channel) noexcept {
     int nextRead = (readIndexInt + 1) % size(); // second value used for interpolation
     float interpolatedValue = utils::interpolate(delayBuffer.getSample(channel, readIndexInt),
                                                  delayBuffer.getSample(channel, nextRead), fract);
-
-    //printf("%d - %d - %d - %10.3f\n", lastIndex[channel], size(), readIndexInt);
 
     return interpolatedValue;
 
@@ -108,7 +110,7 @@ void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, i
             float inputBufferSample = buffer.getSample(channel, sampleIndex);
             float delayedSample = readSample(channel);
             float newSample = wet * delayedSample + (1 - wet) * inputBufferSample;
-            writeNewSample(channel,  inputBufferSample + feedback * delayedSample);
+            writeNewSample(channel, inputBufferSample + feedback * delayedSample);
             buffer.setSample(channel, sampleIndex, newSample);
             applyLfo();
         }
@@ -118,5 +120,7 @@ void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, i
 void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept {
     processBlock(buffer, midiMessages, buffer.getNumSamples());
 }
+
+
 
 
