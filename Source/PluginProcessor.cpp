@@ -21,10 +21,8 @@
 namespace IDs {
     static String intensity{"intensity"};
     static String mix{"mix"};
-
     static String blur{"blur"};
     static String rate{"rate"};
-
     static String enhance{"enhance"};
 }
 
@@ -34,12 +32,11 @@ namespace IDs {
 AudioProcessorValueTreeState::ParameterLayout createParameterLayout() {
     AudioProcessorValueTreeState::ParameterLayout layout;
 
-    // TODO: set the correct limits for the parameters
 
     // clustering the parameters into groups
 
     // central big knob
-    auto big_knob = std::make_unique<AudioProcessorParameterGroup>("big_knob", TRANS ("BIG KNOB"), "|");
+    auto big_knob = std::make_unique<AudioProcessorParameterGroup>("big_knob", TRANS ("BIG_KNOB"), "|");
 
     big_knob->addChild(
             std::make_unique<AudioParameterFloat>(IDs::intensity, "Intensity", NormalisableRange<float>(0.0f, 1.0f),
@@ -75,12 +72,30 @@ AudioProcessorValueTreeState::ParameterLayout createParameterLayout() {
  * @param value
  */
 void Cmls_hw2_group10AudioProcessor::parameterChanged(const String &param, float value) {
+    // TODO: check if all parameters all changed at creation
+    if (param.equalsIgnoreCase("intensity")) {
+        chorus.setIntensity(value);
+        // todo: change also the feedback
+    } else if (param.equalsIgnoreCase("mix")) {
+        chorus.setWet(value);
+    } else if (param.equalsIgnoreCase("blur")) {
+        float valueInRange = jmap(value, 0.0f, 0.7f);
+        chorus.setBlurMix(valueInRange);
+    } else if (param.equalsIgnoreCase("rate")) {
+        float valueInRange = jmap(value, 0.5f, 8.0f);
+        chorus.setLfoRate(valueInRange);
+    } else if (param.equalsIgnoreCase("enhance")) {
+        float valueInRange = jmap(value, 0.5f, 8.0f);
+        chorus.setStereoEnhance(valueInRange);
+    } else {
+        jassert(false); // no match
+    }
+
 }
 
 
 AudioProcessorEditor *Cmls_hw2_group10AudioProcessor::createEditor() {
-    //return new foleys::MagicPluginEditor(magicState, BinaryData::scheme_debug_xml, BinaryData::scheme_debug_xmlSize);
-    return nullptr; // TODO: magicplugineditor
+    return new foleys::MagicPluginEditor(magicState, BinaryData::scheme_debug_xml, BinaryData::scheme_debug_xmlSize);
 }
 
 bool Cmls_hw2_group10AudioProcessor::hasEditor() const {
@@ -142,6 +157,15 @@ Cmls_hw2_group10AudioProcessor::Cmls_hw2_group10AudioProcessor()
 
     enhance = treeState.getRawParameterValue(IDs::enhance);
     jassert (enhance != nullptr);
+
+    // adding listener
+    treeState.addParameterListener (IDs::intensity, this);
+    treeState.addParameterListener (IDs::blur, this);
+    treeState.addParameterListener (IDs::rate, this);
+    treeState.addParameterListener (IDs::mix, this);
+    treeState.addParameterListener (IDs::enhance, this);
+
+
 }
 
 

@@ -58,6 +58,10 @@ public:
     void getStateInformation(MemoryBlock &destData) override;
     void setStateInformation(const void *data, int sizeInBytes) override;
 
+
+    //==============================================================================
+
+
 private:
     Chorus chorus;
 
@@ -67,7 +71,6 @@ private:
     std::atomic<float> *blur = nullptr;
     std::atomic<float> *mix = nullptr;
     std::atomic<float> *enhance = nullptr;
-
 
     // GUI Editor
     AudioProcessorValueTreeState treeState;
