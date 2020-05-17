@@ -70,7 +70,7 @@
             width="110" height="170"/>
       <Slider slider-type="rotary" slider-textbox="no-textbox" flex-align-self="center"
               height="110" lookAndFeel="Skeuomorphic" width="110" rotary-fill="FFD32D56"
-              tooltip="Increase the quanity of side signal. When the knob is set to half, the side is unchanged."
+              tooltip="Increase the quantity of side signal. When the knob is set to half, the side is unchanged."
               id="MIX" background-color="00000000" padding="0" margin="4" rotary-outline="FF269138"
               slider-track="FF5633FF" slider-thumb="FFFFBC42" parameter="enhance"
               caption=""/>
