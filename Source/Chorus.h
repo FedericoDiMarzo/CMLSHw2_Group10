@@ -23,9 +23,9 @@ public:
     /**
      * Sets the mix between the chorus and the blur delays.
      *
-     * @param blurMix
+     * @param blurLevel
      */
-    void setBlurMix(float blurMix);
+    void setBlurLevel(float blurLevel);
 
     /**
      * Sets the frequency of the delays' lfos.
@@ -33,6 +33,14 @@ public:
      * @param frequency
      */
     void setLfoRate(float frequency);
+
+    /**
+     * Sets the intensity of the delays' lfos.
+     *
+     * @param intensity
+     */
+    void setLfoIntensity(float intensity);
+
 
     /**
      * Sets the feedback for the blur delays.
@@ -88,7 +96,7 @@ private:
     float blurDelaysDelayTime = 0.2;
 
     // blur amount
-    float blurMix = 0;
+    float blurLevel = 0;
 
     // number of delay lines for channel
     int delaysForChannel = 2;

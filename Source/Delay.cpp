@@ -38,23 +38,20 @@ void Delay::setLfoSpeed(float frequency) {
 }
 
 void Delay::setLfoIntensity(float intensity) {
-    jassert(intensity <= 0.0000003);
+    //jassert(intensity <= 0.0000003);
     lfoIntensity = intensity;
 }
 
 void Delay::applyLfo() noexcept {
     float lfoValue = lfo.getNextValue();
-    float delayDelta = jmap(lfoValue, -1.0f, 1.0f,
-                            -lfoIntensity, lfoIntensity);
-
-    jassert(delayTime + delayDelta > 0);
-    jassert(delayTime + delayDelta < MAX_DELAY);
-
-    setDelay(delayTime + delayDelta);
+    delayDelta = jmap(lfoValue, -1.0f, 1.0f,
+                      -lfoIntensity, lfoIntensity);
 }
 
 void Delay::writeNewSample(int channel, float sample) noexcept {
-    jassert(size() > 0);
+    if (size() == 0) {
+        return;
+    }
     jassert(channel >= 0);
     jassert(channel < 2);
 
@@ -65,11 +62,15 @@ void Delay::writeNewSample(int channel, float sample) noexcept {
 }
 
 float Delay::readSample(int channel) noexcept {
-    jassert(size() > 0);
+    float modulatedDelayTime = delayTime + delayDelta;
+    if (size() == 0) {
+        return 0;
+    }
     jassert(channel >= 0);
     jassert(channel < 2);
-
-    float readIndex = static_cast<float>(lastIndex[channel]) - (delayTime * sampleRate);
+    jassert(modulatedDelayTime > 0);
+    jassert(modulatedDelayTime < MAX_DELAY);
+    float readIndex = static_cast<float>(lastIndex[channel]) - (modulatedDelayTime * sampleRate);
     if (readIndex < 0) {
         // underflow wrapping
         readIndex = static_cast<float>(size()) + readIndex;
@@ -101,8 +102,8 @@ void Delay::releaseResources() {
     lfo.releaseResources();
 }
 
-void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, int numberOfSamples) noexcept {
-
+void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept {
+    int numberOfSamples = buffer.getNumSamples();
     // iterating per channel
     for (int channel = 0; channel < buffer.getNumChannels(); ++channel) {
         for (int sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++) {
@@ -115,10 +116,6 @@ void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, i
             applyLfo();
         }
     }
-}
-
-void Delay::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept {
-    processBlock(buffer, midiMessages, buffer.getNumSamples());
 }
 
 

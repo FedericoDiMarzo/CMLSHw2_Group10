@@ -5,8 +5,8 @@
               pluginManufacturer="Group10" pluginAUMainType="'aufx'">
   <MAINGROUP id="HIpda5" name="Cmls_hw2_group10">
     <GROUP id="{097B7DE2-A31B-A573-DADA-E2DC0CC8E789}" name="resources">
-      <FILE id="SVQi9t" name="scheme_debug.xml" compile="0" resource="1"
-            file="resources/scheme_debug.xml"/>
+      <FILE id="CAoZVS" name="background.jpg" compile="0" resource="1" file="resources/background.jpg"/>
+      <FILE id="AOgzG2" name="scheme.xml" compile="0" resource="1" file="resources/scheme.xml"/>
     </GROUP>
     <GROUP id="{F8A20297-1A39-AC16-ADBD-3F9532B76BB3}" name="Source">
       <FILE id="muEExV" name="MorphingLfo.cpp" compile="1" resource="0" file="Source/MorphingLfo.cpp"/>
@@ -22,9 +22,6 @@
             file="Source/PluginProcessor.cpp"/>
       <FILE id="e0xUDB" name="PluginProcessor.h" compile="0" resource="0"
             file="Source/PluginProcessor.h"/>
-      <FILE id="J8iv6k" name="PluginEditor.cpp" compile="1" resource="0"
-            file="Source/PluginEditor.cpp"/>
-      <FILE id="sCzf35" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>

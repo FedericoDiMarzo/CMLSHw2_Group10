@@ -78,8 +78,6 @@ public:
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) noexcept override;
-    void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages, int numberOfSamples) noexcept;
-
 
 
 private:
@@ -128,5 +126,8 @@ private:
 
     // lfo intensity over the delayTime
     float lfoIntensity = 0.0000001;
+
+    // modulation applied to the delayTime
+    float delayDelta = 0;
 
 };

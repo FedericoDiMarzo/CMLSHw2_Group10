@@ -75,17 +75,20 @@ void Cmls_hw2_group10AudioProcessor::parameterChanged(const String &param, float
     // TODO: check if all parameters all changed at creation
     if (param.equalsIgnoreCase("intensity")) {
         chorus.setIntensity(value);
-        // todo: change also the feedback
+        float lfoIntensity = jmap(value, 0.0001f, 0.0015f);
+        chorus.setLfoIntensity(lfoIntensity);
     } else if (param.equalsIgnoreCase("mix")) {
         chorus.setWet(value);
     } else if (param.equalsIgnoreCase("blur")) {
-        float valueInRange = jmap(value, 0.0f, 0.7f);
-        chorus.setBlurMix(valueInRange);
+        float blurLevel = jmap(value, 0.0f, 0.8f);
+        chorus.setBlurLevel(blurLevel);
+        float blurFeedback = jmap(value, 0.0f, 0.7f);
+        chorus.setBlurFeedback(blurFeedback);
     } else if (param.equalsIgnoreCase("rate")) {
         float valueInRange = jmap(value, 0.5f, 8.0f);
         chorus.setLfoRate(valueInRange);
     } else if (param.equalsIgnoreCase("enhance")) {
-        float valueInRange = jmap(value, 0.5f, 8.0f);
+        float valueInRange = jmap(value, 0.0f, 2.0f);
         chorus.setStereoEnhance(valueInRange);
     } else {
         jassert(false); // no match
@@ -95,7 +98,7 @@ void Cmls_hw2_group10AudioProcessor::parameterChanged(const String &param, float
 
 
 AudioProcessorEditor *Cmls_hw2_group10AudioProcessor::createEditor() {
-    return new foleys::MagicPluginEditor(magicState, BinaryData::scheme_debug_xml, BinaryData::scheme_debug_xmlSize);
+    return new foleys::MagicPluginEditor(magicState, BinaryData::scheme_xml, BinaryData::scheme_xmlSize);
 }
 
 bool Cmls_hw2_group10AudioProcessor::hasEditor() const {
@@ -203,8 +206,6 @@ void Cmls_hw2_group10AudioProcessor::processBlock(AudioBuffer<float> &buffer, Mi
 
 
     chorus.processBlock(buffer, midiMessages);
-    buffer.applyGain(1.5);
-    //delay.processBlock(buffer, midiMessages);
 }
 
 //==============================================================================
