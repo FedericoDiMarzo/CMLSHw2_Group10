@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="o484jn" name="Cmls_hw2_group10" projectType="audioplug" jucerVersion="5.4.7"
+<JUCERPROJECT id="o484jn" name="CMLS Chorus" projectType="audioplug" jucerVersion="5.4.7"
               pluginFormats="buildAU,buildVST3" pluginManufacturer="Group10"
               pluginAUMainType="'aufx'">
-  <MAINGROUP id="HIpda5" name="Cmls_hw2_group10">
+  <MAINGROUP id="HIpda5" name="CMLS Chorus">
     <GROUP id="{097B7DE2-A31B-A573-DADA-E2DC0CC8E789}" name="resources">
       <FILE id="YyuPtL" name="background.jpg" compile="0" resource="1" file="resources/background.jpg"/>
       <FILE id="NHWL01" name="scheme.xml" compile="0" resource="1" file="resources/scheme.xml"/>
