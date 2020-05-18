@@ -35,11 +35,11 @@ public:
     void setLfoRate(float frequency);
 
     /**
-     * Sets the intensity of the delays' lfos.
+     * Sets the depth of the delays' lfos.
      *
      * @param intensity
      */
-    void setLfoIntensity(float intensity);
+    void setLfoDepth(float intensity);
 
 
     /**
@@ -118,4 +118,8 @@ private:
 
     // gain of one of the delayLine
     float intensity = 1;
+
+
+    // 0-1 value retrieved from parameters
+    float param = 0;
 };

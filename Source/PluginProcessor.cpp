@@ -21,7 +21,7 @@
 namespace IDs {
     static String intensity{"intensity"};
     static String mix{"mix"};
-    static String blur{"blur"};
+    static String depth{"depth"};
     static String rate{"rate"};
     static String enhance{"enhance"};
 }
@@ -46,15 +46,15 @@ AudioProcessorValueTreeState::ParameterLayout createParameterLayout() {
     // lfo group
     auto lfo = std::make_unique<AudioProcessorParameterGroup>("lfo", TRANS ("LFO"), "|");
 
-    lfo->addChild(std::make_unique<AudioParameterFloat>(IDs::blur, "Blur", NormalisableRange<float>(0.0f, 1.0f), 0.0f),
-                  std::make_unique<AudioParameterFloat>(IDs::rate, "Rate", NormalisableRange<float>(0.0f, 1.0f), 0.5f));
+    lfo->addChild(std::make_unique<AudioParameterFloat>(IDs::depth, "Depth", NormalisableRange<float>(0.0f, 1.0f), 0.6f),
+                  std::make_unique<AudioParameterFloat>(IDs::rate, "Rate", NormalisableRange<float>(0.0f, 1.0f), 0.3f));
 
 
     // utility group
     auto utility = std::make_unique<AudioProcessorParameterGroup>("utility", TRANS ("UTILITY"), "|");
 
     utility->addChild(
-            std::make_unique<AudioParameterFloat>(IDs::enhance, "Enhance", NormalisableRange<float>(0.0f, 1.0f), 0.0f),
+            std::make_unique<AudioParameterFloat>(IDs::enhance, "Enhance", NormalisableRange<float>(0.0f, 1.0f), 0.5f),
             std::make_unique<AudioParameterFloat>(IDs::mix, "Mix", NormalisableRange<float>(0.0f, 1.0f), 0.5f));
 
 
@@ -75,21 +75,14 @@ void Cmls_hw2_group10AudioProcessor::parameterChanged(const String &param, float
     // TODO: check if all parameters all changed at creation
     if (param.equalsIgnoreCase("intensity")) {
         chorus.setIntensity(value);
-        float lfoIntensity = jmap(value, 0.0001f, 0.0015f);
-        chorus.setLfoIntensity(lfoIntensity);
     } else if (param.equalsIgnoreCase("mix")) {
         chorus.setWet(value);
-    } else if (param.equalsIgnoreCase("blur")) {
-        float blurLevel = jmap(value, 0.0f, 0.8f);
-        chorus.setBlurLevel(blurLevel);
-        float blurFeedback = jmap(value, 0.0f, 0.7f);
-        chorus.setBlurFeedback(blurFeedback);
+    } else if (param.equalsIgnoreCase("depth")) {
+        chorus.setLfoDepth(value);
     } else if (param.equalsIgnoreCase("rate")) {
-        float valueInRange = jmap(value, 0.5f, 8.0f);
-        chorus.setLfoRate(valueInRange);
+        chorus.setLfoRate(value);
     } else if (param.equalsIgnoreCase("enhance")) {
-        float valueInRange = jmap(value, 0.0f, 2.0f);
-        chorus.setStereoEnhance(valueInRange);
+        chorus.setStereoEnhance(value);
     } else {
         jassert(false); // no match
     }
@@ -106,17 +99,18 @@ bool Cmls_hw2_group10AudioProcessor::hasEditor() const {
 }
 
 
-void Cmls_hw2_group10AudioProcessor::getStateInformation(MemoryBlock &destData) {
+void Cmls_hw2_group10AudioProcessor::getStateInformation(MemoryBlock &destData)  {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
-    magicState.getStateInformation(destData);
+    //magicState.getStateInformation(destData);
+   
 }
 
 void Cmls_hw2_group10AudioProcessor::setStateInformation(const void *data, int sizeInBytes) {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
-    magicState.setStateInformation(data, sizeInBytes, getActiveEditor());
+ // magicState.setStateInformation(data, sizeInBytes, getActiveEditor());  
 }
 
 //==============================================================================
@@ -140,34 +134,14 @@ Cmls_hw2_group10AudioProcessor::Cmls_hw2_group10AudioProcessor()
 
 
         //add Listener for the parameters
-        treeState(*this, nullptr, "PARAMETERS", createParameterLayout()) {
-    // big knob parameter
-    intensity = treeState.getRawParameterValue(IDs::intensity);
-    jassert (intensity != nullptr);
-
-
-    // lfo group parameters
-    blur = treeState.getRawParameterValue(IDs::blur);
-    jassert(blur != nullptr);
-
-    rate = treeState.getRawParameterValue(IDs::rate);
-    jassert (rate != nullptr);
-
-
-    // utility group parameters   
-    mix = treeState.getRawParameterValue(IDs::mix);
-    jassert(mix != nullptr);
-
-    enhance = treeState.getRawParameterValue(IDs::enhance);
-    jassert (enhance != nullptr);
+   treeState(*this, nullptr, "PARAMETERS", createParameterLayout()) {
 
     // adding listener
-    treeState.addParameterListener (IDs::intensity, this);
-    treeState.addParameterListener (IDs::blur, this);
-    treeState.addParameterListener (IDs::rate, this);
-    treeState.addParameterListener (IDs::mix, this);
-    treeState.addParameterListener (IDs::enhance, this);
-
+    treeState.addParameterListener(IDs::intensity, this);
+    treeState.addParameterListener(IDs::depth, this);
+    treeState.addParameterListener(IDs::rate, this);
+    treeState.addParameterListener(IDs::mix, this);
+    treeState.addParameterListener(IDs::enhance, this);
 
 }
 
@@ -181,6 +155,30 @@ Cmls_hw2_group10AudioProcessor::~Cmls_hw2_group10AudioProcessor() {
 // AudioProcessor main functions
 
 void Cmls_hw2_group10AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
+    
+    treeState.getParameter("mix")->setValue(0.5);
+    treeState.getParameter("enhance")->setValue(0.5);
+    treeState.getParameter("intensity")->setValue(0.7);
+    treeState.getParameter("rate")->setValue(0.3);
+    treeState.getParameter("depth")->setValue(0.6);
+
+
+    //setting the initial state
+    intensity = treeState.getParameterAsValue(IDs::intensity).getValue();
+    chorus.setIntensity(intensity);
+
+    depth = treeState.getParameterAsValue(IDs::depth).getValue();
+    chorus.setLfoDepth(depth);
+
+    rate = treeState.getParameterAsValue(IDs::rate).getValue();
+    chorus.setLfoRate(rate);
+
+    mix = treeState.getParameterAsValue(IDs::mix).getValue();
+    chorus.setWet(mix);
+
+    enhance = treeState.getParameterAsValue(IDs::enhance).getValue(); 
+    chorus.setStereoEnhance(enhance);
+
     chorus.prepareToPlay(sampleRate, samplesPerBlock);
 }
 

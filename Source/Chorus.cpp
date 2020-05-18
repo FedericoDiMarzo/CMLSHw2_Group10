@@ -74,7 +74,8 @@ void Chorus::setBlurFeedback(float blurFeedback) {
     }
 }
 
-void Chorus::setLfoRate(float frequency) {
+void Chorus::setLfoRate(float param) {
+    float frequency = jmap(param, 0.5f, 6.0f);
     float randScale = 0.3;
     jassert(frequency - randScale > 0);
     for (int i = 0; i < delaysForChannel * 2; i++) {
@@ -83,17 +84,21 @@ void Chorus::setLfoRate(float frequency) {
     }
 }
 
-void Chorus::setStereoEnhance(float stereoEnhance) {
+void Chorus::setStereoEnhance(float param) {
+    float stereoEnhance = jmap(param, 0.0f, 2.0f);
     jassert(stereoEnhance >= 0);
     this->stereoEnhance = stereoEnhance;
 }
 
-void Chorus::setIntensity(float intensity) {
-    jassert(intensity >= 0);
-    this->intensity = intensity;
+void Chorus::setIntensity(float param) {
+    jassert(param >= 0);
+    this->intensity = param;
 }
 
-void Chorus::setLfoIntensity(float intensity) {
+void Chorus::setLfoDepth(float param) {
+    
+    float intensity = jmap(param, 0.0001f, 0.0015f);
+
     jassert(intensity >= 0);
     jassert(intensity < 0.002);
     for (int i = 0; i < delaysForChannel * 2; i++) {

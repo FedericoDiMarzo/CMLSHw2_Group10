@@ -66,11 +66,11 @@ private:
     Chorus chorus;
 
     // GUI parametes
-    std::atomic<float> *intensity = nullptr;
-    std::atomic<float> *rate = nullptr;
-    std::atomic<float> *blur = nullptr;
-    std::atomic<float> *mix = nullptr;
-    std::atomic<float> *enhance = nullptr;
+    float intensity = 0.5f;
+    float rate = 0.5f;
+    float depth = 0.5f;
+    float mix = 0.5f;
+    float enhance = 0.5f;
 
     // GUI Editor
     AudioProcessorValueTreeState treeState;

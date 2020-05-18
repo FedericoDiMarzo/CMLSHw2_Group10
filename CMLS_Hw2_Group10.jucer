@@ -5,8 +5,9 @@
               pluginManufacturer="Group10" pluginAUMainType="'aufx'">
   <MAINGROUP id="HIpda5" name="Cmls_hw2_group10">
     <GROUP id="{097B7DE2-A31B-A573-DADA-E2DC0CC8E789}" name="resources">
-      <FILE id="CAoZVS" name="background.jpg" compile="0" resource="1" file="resources/background.jpg"/>
-      <FILE id="AOgzG2" name="scheme.xml" compile="0" resource="1" file="resources/scheme.xml"/>
+      <FILE id="B1tQrW" name="background_textured.jpg" compile="0" resource="1"
+            file="resources/background_textured.jpg"/>
+      <FILE id="TsF8K7" name="scheme.xml" compile="0" resource="1" file="resources/scheme.xml"/>
     </GROUP>
     <GROUP id="{F8A20297-1A39-AC16-ADBD-3F9532B76BB3}" name="Source">
       <FILE id="muEExV" name="MorphingLfo.cpp" compile="1" resource="0" file="Source/MorphingLfo.cpp"/>
@@ -115,6 +116,7 @@
   </MODULES>
   <LIVE_SETTINGS>
     <OSX/>
+    <WINDOWS/>
   </LIVE_SETTINGS>
   <JUCEOPTIONS JUCE_VST3_CAN_REPLACE_VST2="0" JUCE_STRICT_REFCOUNTEDPOINTER="1"
                FOLEYS_ENABLE_BINARY_DATA="1" FOLEYS_SHOW_GUI_EDITOR_PALLETTE="0"/>
