@@ -68,7 +68,7 @@ private:
     // GUI parametes
     float intensity = 0.0f;
     float rate = 0.0f;
-    float depth = 0.0f;
+    float blur = 0.0f;
     float mix = 0.0f;
     float enhance = 0.0f;
 

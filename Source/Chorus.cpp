@@ -52,13 +52,14 @@ void Chorus::setWet(float param) {
 void Chorus::setBlurLevel(float param) {
     jassert(param >= 0);
     jassert(param <= 1);
+    param = jmap(param, 0.0f, 0.6f);
     this->blurLevel = param;
 }
 
 void Chorus::setBlurFeedback(float param) {
     jassert(param >= 0);
     jassert(param <= 1);
-    jmap(param, 0.0f, 0.4f);
+    param = jmap(param, 0.0f, 0.5f);
     this->blurFeedback = param;
     blurStereoDelay.setFeedback(blurFeedback);
 }
@@ -100,7 +101,7 @@ void Chorus::setLfoDepth(float param) {
 void Chorus::setBlurDelayTime(float param) {
     jassert(param >= 0);
     jassert(param <= 1);
-    float blurDelayTime = jmap(param, 0.1f, 0.22f);
+    float blurDelayTime = jmap(param, 0.07f, 0.15f);
     this->blurDelayTime = blurDelayTime;
     blurStereoDelay.setDelay(blurDelayTime);
 }
@@ -214,7 +215,7 @@ void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) 
     // gain compensation for the mix knob:
     // it's always better to check the effected and dry signal with
     // the same levels!
-    float compensationAmount = 0.5; // TODO: fine tune the value
+    float compensationAmount = 0.4; 
     buffer.applyGain(1 + wet * compensationAmount);
 
 }

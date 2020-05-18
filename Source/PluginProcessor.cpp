@@ -173,8 +173,9 @@ void Cmls_hw2_group10AudioProcessor::prepareToPlay(double sampleRate, int sample
     chorus.setLfoDepth(intensity);
     chorus.setBlurFeedback(intensity);
 
-    depth = treeState.getParameterAsValue(IDs::blur).getValue();
-    chorus.setBlurLevel(depth);
+    blur = treeState.getParameterAsValue(IDs::blur).getValue();
+    chorus.setBlurLevel(blur);
+    chorus.setBlurDelayTime(blur);
 
     rate = treeState.getParameterAsValue(IDs::rate).getValue();
     chorus.setLfoRate(rate);
