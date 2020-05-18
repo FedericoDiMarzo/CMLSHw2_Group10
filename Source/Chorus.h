@@ -4,9 +4,8 @@
 
 #include <JuceHeader.h>
 #include "Delay.h"
-#include "MorphingLfo.h"
+#include "CustomLfo.h"
 #include "ProcessorTemplate.h"
-//#include "Utils.h"
 
 class Chorus : public ProcessorTemplate {
 public:
@@ -16,16 +15,16 @@ public:
     /**
      * Sets the mix between dry and effected signal.
      *
-     * @param wet
+     * @param param
      */
-    void setWet(float wet);
+    void setWet(float param);
 
     /**
      * Sets the mix between the chorus and the blur delays.
      *
-     * @param blurLevel
+     * @param param
      */
-    void setBlurLevel(float blurLevel);
+    void setBlurLevel(float param);
 
     /**
      * Sets the frequency of the delays' lfos.
@@ -35,7 +34,7 @@ public:
     void setLfoRate(float frequency);
 
     /**
-     * Sets the depth of the delays' lfos.
+     * Sets the blur of the delays' lfos.
      *
      * @param intensity
      */
@@ -45,9 +44,9 @@ public:
     /**
      * Sets the feedback for the blur delays.
      *
-     * @param blurFeedback
+     * @param param
      */
-    void setBlurFeedback(float blurFeedback);
+    void setBlurFeedback(float param);
 
     /**
      * Sets the gain of the side channel.
@@ -62,6 +61,13 @@ public:
      * @param intensity
      */
     void setIntensity(float intensity);
+
+    /**
+     * Set the delay time for the blur delay.
+     *
+     * @param blurDelayTime
+     */
+    void setBlurDelayTime(float blurDelayTime);
 
     //==============================================================================
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -90,10 +96,10 @@ private:
     std::vector<std::unique_ptr<Delay>> delayLines;
 
     // additional delay lines used for blur knob
-    std::vector<std::unique_ptr<Delay>> blurDelays;
+    Delay blurStereoDelay;
 
     // delay time for the blur delays
-    float blurDelaysDelayTime = 0.2;
+    float blurDelayTime = 0.1;
 
     // blur amount
     float blurLevel = 0;
@@ -119,7 +125,4 @@ private:
     // gain of one of the delayLine
     float intensity = 1;
 
-
-    // 0-1 value retrieved from parameters
-    float param = 0;
 };

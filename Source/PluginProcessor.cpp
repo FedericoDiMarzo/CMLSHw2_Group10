@@ -21,7 +21,7 @@
 namespace IDs {
     static String intensity{"intensity"};
     static String mix{"mix"};
-    static String depth{"depth"};
+    static String blur{"blur"};
     static String rate{"rate"};
     static String enhance{"enhance"};
 }
@@ -40,14 +40,15 @@ AudioProcessorValueTreeState::ParameterLayout createParameterLayout() {
 
     big_knob->addChild(
             std::make_unique<AudioParameterFloat>(IDs::intensity, "Intensity", NormalisableRange<float>(0.0f, 1.0f),
-                                                  0.7f));
+                                                  0.3f));
 
 
     // lfo group
     auto lfo = std::make_unique<AudioProcessorParameterGroup>("lfo", TRANS ("LFO"), "|");
 
-    lfo->addChild(std::make_unique<AudioParameterFloat>(IDs::depth, "Depth", NormalisableRange<float>(0.0f, 1.0f), 0.6f),
-                  std::make_unique<AudioParameterFloat>(IDs::rate, "Rate", NormalisableRange<float>(0.0f, 1.0f), 0.3f));
+    lfo->addChild(
+            std::make_unique<AudioParameterFloat>(IDs::blur, "Blur", NormalisableRange<float>(0.0f, 1.0f), 0.0f),
+            std::make_unique<AudioParameterFloat>(IDs::rate, "Rate", NormalisableRange<float>(0.0f, 1.0f), 0.3f));
 
 
     // utility group
@@ -72,13 +73,15 @@ AudioProcessorValueTreeState::ParameterLayout createParameterLayout() {
  * @param value
  */
 void Cmls_hw2_group10AudioProcessor::parameterChanged(const String &param, float value) {
-    // TODO: check if all parameters all changed at creation
     if (param.equalsIgnoreCase("intensity")) {
         chorus.setIntensity(value);
+        chorus.setLfoDepth(value);
+        chorus.setBlurFeedback(value);
     } else if (param.equalsIgnoreCase("mix")) {
         chorus.setWet(value);
-    } else if (param.equalsIgnoreCase("depth")) {
-        chorus.setLfoDepth(value);
+    } else if (param.equalsIgnoreCase("blur")) {
+        chorus.setBlurLevel(value);
+        chorus.setBlurDelayTime(value);
     } else if (param.equalsIgnoreCase("rate")) {
         chorus.setLfoRate(value);
     } else if (param.equalsIgnoreCase("enhance")) {
@@ -99,18 +102,18 @@ bool Cmls_hw2_group10AudioProcessor::hasEditor() const {
 }
 
 
-void Cmls_hw2_group10AudioProcessor::getStateInformation(MemoryBlock &destData)  {
+void Cmls_hw2_group10AudioProcessor::getStateInformation(MemoryBlock &destData) {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
-    //magicState.getStateInformation(destData);
-   
+    // magicState.getStateInformation(destData);
+
 }
 
 void Cmls_hw2_group10AudioProcessor::setStateInformation(const void *data, int sizeInBytes) {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
- // magicState.setStateInformation(data, sizeInBytes, getActiveEditor());  
+    // magicState.setStateInformation(data, sizeInBytes, getActiveEditor());
 }
 
 //==============================================================================
@@ -134,11 +137,11 @@ Cmls_hw2_group10AudioProcessor::Cmls_hw2_group10AudioProcessor()
 
 
         //add Listener for the parameters
-   treeState(*this, nullptr, "PARAMETERS", createParameterLayout()) {
+        treeState(*this, nullptr, "PARAMETERS", createParameterLayout()) {
 
     // adding listener
     treeState.addParameterListener(IDs::intensity, this);
-    treeState.addParameterListener(IDs::depth, this);
+    treeState.addParameterListener(IDs::blur, this);
     treeState.addParameterListener(IDs::rate, this);
     treeState.addParameterListener(IDs::mix, this);
     treeState.addParameterListener(IDs::enhance, this);
@@ -155,20 +158,23 @@ Cmls_hw2_group10AudioProcessor::~Cmls_hw2_group10AudioProcessor() {
 // AudioProcessor main functions
 
 void Cmls_hw2_group10AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
-    
+
+    // just to be safe
     treeState.getParameter("mix")->setValue(0.5);
     treeState.getParameter("enhance")->setValue(0.5);
-    treeState.getParameter("intensity")->setValue(0.7);
+    treeState.getParameter("intensity")->setValue(0.3);
     treeState.getParameter("rate")->setValue(0.3);
-    treeState.getParameter("depth")->setValue(0.6);
+    treeState.getParameter("blur")->setValue(0.0);
 
 
     //setting the initial state
     intensity = treeState.getParameterAsValue(IDs::intensity).getValue();
     chorus.setIntensity(intensity);
+    chorus.setLfoDepth(intensity);
+    chorus.setBlurFeedback(intensity);
 
-    depth = treeState.getParameterAsValue(IDs::depth).getValue();
-    chorus.setLfoDepth(depth);
+    depth = treeState.getParameterAsValue(IDs::blur).getValue();
+    chorus.setBlurLevel(depth);
 
     rate = treeState.getParameterAsValue(IDs::rate).getValue();
     chorus.setLfoRate(rate);
@@ -176,7 +182,7 @@ void Cmls_hw2_group10AudioProcessor::prepareToPlay(double sampleRate, int sample
     mix = treeState.getParameterAsValue(IDs::mix).getValue();
     chorus.setWet(mix);
 
-    enhance = treeState.getParameterAsValue(IDs::enhance).getValue(); 
+    enhance = treeState.getParameterAsValue(IDs::enhance).getValue();
     chorus.setStereoEnhance(enhance);
 
     chorus.prepareToPlay(sampleRate, samplesPerBlock);
@@ -269,7 +275,6 @@ bool Cmls_hw2_group10AudioProcessor::isBusesLayoutSupported(const BusesLayout &l
     ignoreUnused (layouts);
     return true;
 #else
-    // TODO: set also mono to stereo
     // This is the place where you check if the layout is supported.
     // In this template code we only support mono or stereo.
     if (layouts.getMainOutputChannelSet() != AudioChannelSet::mono()

@@ -1,12 +1,3 @@
-/*
-  ==============================================================================
-
-    Chorus.cpp
-    Created: 12 May 2020 11:59:22pm
-    Author:  Federico Di Marzo
-
-  ==============================================================================
-*/
 
 #include "Chorus.h"
 
@@ -26,14 +17,13 @@ Chorus::Chorus() {
     delayLines[3]->setDelay(0.0045);
 
     // pushing the blur delay lines
-    for (int i = 0; i < 2; i++) {
-        float rand = Random::getSystemRandom().nextFloat();
-        rand = jmap(rand, 0.001f, 0.005f);
-        blurDelays.push_back(std::make_unique<Delay>());
-        blurDelays[i]->setDelay(blurDelaysDelayTime + rand);
-        blurDelays[i]->setWet(1);
-        blurDelays[i]->setFeedback(blurFeedback);
-    }
+
+    float rand = Random::getSystemRandom().nextFloat();
+    rand = jmap(rand, 0.001f, 0.005f);
+    blurStereoDelay.setDelay(blurDelayTime + rand);
+    blurStereoDelay.setWet(1);
+    blurStereoDelay.setFeedback(blurFeedback);
+
 
     // pushing the buffers
     for (int i = 0; i < 3; i++) {
@@ -53,31 +43,31 @@ void Chorus::setDelay(float delayTime) noexcept {
     }
 }
 
-void Chorus::setWet(float wet) {
-    jassert(wet >= 0);
-    jassert(wet <= 1);
-    this->wet = wet;
+void Chorus::setWet(float param) {
+    jassert(param >= 0);
+    jassert(param <= 1);
+    this->wet = param;
 }
 
-void Chorus::setBlurLevel(float blurLevel) {
-    jassert(blurLevel >= 0);
-    jassert(blurLevel <= 1);
-    this->blurLevel = blurLevel;
+void Chorus::setBlurLevel(float param) {
+    jassert(param >= 0);
+    jassert(param <= 1);
+    this->blurLevel = param;
 }
 
-void Chorus::setBlurFeedback(float blurFeedback) {
-    jassert(blurFeedback >= 0);
-    jassert(blurFeedback < 1);
-    this->blurFeedback = blurFeedback;
-    for (auto &delay : blurDelays) {
-        delay->setFeedback(blurFeedback);
-    }
+void Chorus::setBlurFeedback(float param) {
+    jassert(param >= 0);
+    jassert(param <= 1);
+    jmap(param, 0.0f, 0.4f);
+    this->blurFeedback = param;
+    blurStereoDelay.setFeedback(blurFeedback);
 }
 
 void Chorus::setLfoRate(float param) {
+    jassert(param >= 0);
+    jassert(param <= 1);
     float frequency = jmap(param, 0.5f, 6.0f);
     float randScale = 0.3;
-    jassert(frequency - randScale > 0);
     for (int i = 0; i < delaysForChannel * 2; i++) {
         float rand = (Random::getSystemRandom().nextFloat() - 0.5f) * 2;
         delayLines[i]->setLfoSpeed(frequency + rand * randScale);
@@ -85,25 +75,34 @@ void Chorus::setLfoRate(float param) {
 }
 
 void Chorus::setStereoEnhance(float param) {
+    jassert(param >= 0);
+    jassert(param <= 1);
     float stereoEnhance = jmap(param, 0.0f, 2.0f);
-    jassert(stereoEnhance >= 0);
     this->stereoEnhance = stereoEnhance;
 }
 
 void Chorus::setIntensity(float param) {
     jassert(param >= 0);
+    jassert(param <= 1);
     this->intensity = param;
 }
 
 void Chorus::setLfoDepth(float param) {
-    
+    jassert(param >= 0);
+    jassert(param <= 1);
     float intensity = jmap(param, 0.0001f, 0.0015f);
 
-    jassert(intensity >= 0);
-    jassert(intensity < 0.002);
     for (int i = 0; i < delaysForChannel * 2; i++) {
         delayLines[i]->setLfoIntensity(intensity);
     }
+}
+
+void Chorus::setBlurDelayTime(float param) {
+    jassert(param >= 0);
+    jassert(param <= 1);
+    float blurDelayTime = jmap(param, 0.1f, 0.22f);
+    this->blurDelayTime = blurDelayTime;
+    blurStereoDelay.setDelay(blurDelayTime);
 }
 
 //==============================================================================
@@ -111,9 +110,14 @@ void Chorus::setLfoDepth(float param) {
 void Chorus::prepareToPlay(double sampleRate, int samplesPerBlock) {
     this->sampleRate = sampleRate;
 
+    // initializing main delay lines
     for (auto &delay: delayLines) {
         delay->prepareToPlay(sampleRate, samplesPerBlock);
     }
+
+    // initializing blur delay
+    blurStereoDelay.prepareToPlay(sampleRate, samplesPerBlock);
+
     for (int i = 0; i < bufferPool.size(); i++) {
         // sizing all the additional buffers
         if (i < 2) {
@@ -131,6 +135,8 @@ void Chorus::releaseResources() {
     for (auto &delay: delayLines) {
         delay->releaseResources();
     }
+
+    blurStereoDelay.releaseResources();
 
     for (auto &buff : bufferPool) {
         // clearing all the parallel buffers
@@ -168,14 +174,6 @@ void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) 
                                    0, 0, numberOfSamples, delayGain);
         }
 
-        // blur delays
-        bufferPool[0]->copyFrom(0, 0, buffer,
-                                channel, 0, numberOfSamples);
-        blurDelays[channel]->processBlock(*bufferPool[0], midiMessages);
-        //buffer.applyGain(channel, 0, numberOfSamples, 1 - blurMix);
-        bufferPool[1]->addFrom(0, 0, *bufferPool[0],
-                               0, 0, numberOfSamples, blurLevel);
-
         // scaling the input based on wet
         buffer.applyGain(channel, 0, numberOfSamples, (1 - wet));
 
@@ -183,20 +181,27 @@ void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) 
         buffer.addFrom(channel, 0, *bufferPool[1],
                        0, 0, numberOfSamples, wet);
 
-        // todo test
-        // blurDelays[channel]->processBlock(buffer, midiMessages);
     }
 
-    // MID SIDE processing
+    // blur delay
+    bufferPool[2]->copyFrom(0, 0, buffer,
+                            0, 0, numberOfSamples);
+    bufferPool[2]->copyFrom(1, 0, buffer,
+                            1, 0, numberOfSamples);
+    blurStereoDelay.processBlock(*bufferPool[2], midiMessages);
+    //buffer.applyGain(channel, 0, numberOfSamples, 1 - blurMix);
+    buffer.addFrom(0, 0, *bufferPool[2],
+                           0, 0, numberOfSamples, blurLevel);
+
+    // MID SIDE processing TODO: bugged
     if (buffer.getNumChannels() == 2) {
         // midside processing applied on a copy in order to do dry/mix
         bufferPool[2]->copyFrom(0, 0, buffer,
                                 0, 0, numberOfSamples);
         bufferPool[2]->copyFrom(1, 0, buffer,
                                 1, 0, numberOfSamples);
-        utils::midSideEncoding(*bufferPool[2]);
-        buffer.applyGain(0, 0, numberOfSamples, stereoEnhance);
-        utils::midSideDecoding(*bufferPool[2]);
+
+        utils::enhanceStereo(*bufferPool[2], stereoEnhance);
 
         // dry wet mix
         buffer.applyGain(1 - wet);
@@ -206,7 +211,15 @@ void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) 
                        1, 0, numberOfSamples, wet);
     }
 
+    // gain compensation for the mix knob:
+    // it's always better to check the effected and dry signal with
+    // the same levels!
+    float compensationAmount = 0.5; // TODO: fine tune the value
+    buffer.applyGain(1 + wet * compensationAmount);
+
 }
+
+
 
 
 

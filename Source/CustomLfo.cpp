@@ -1,14 +1,5 @@
-/*
-  ==============================================================================
 
-    MorphingLfo.cpp
-    Created: 14 May 2020 9:45:39pm
-    Author:  Federico Di Marzo
-
-  ==============================================================================
-*/
-
-#include "MorphingLfo.h"
+#include "CustomLfo.h"
 
 MorphingLfo::MorphingLfo(int tableResolution) {
     this->tableResolution = tableResolution;

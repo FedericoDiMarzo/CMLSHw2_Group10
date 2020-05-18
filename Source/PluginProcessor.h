@@ -66,11 +66,11 @@ private:
     Chorus chorus;
 
     // GUI parametes
-    float intensity = 0.5f;
-    float rate = 0.5f;
-    float depth = 0.5f;
-    float mix = 0.5f;
-    float enhance = 0.5f;
+    float intensity = 0.0f;
+    float rate = 0.0f;
+    float depth = 0.0f;
+    float mix = 0.0f;
+    float enhance = 0.0f;
 
     // GUI Editor
     AudioProcessorValueTreeState treeState;

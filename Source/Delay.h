@@ -4,7 +4,7 @@
 
 #include <JuceHeader.h>
 #include "ProcessorTemplate.h"
-#include "MorphingLfo.h"
+#include "CustomLfo.h"
 #include "Utils.h"
 
 /**

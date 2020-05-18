@@ -49,7 +49,7 @@ namespace utils {
 
         // right (M-S)/2
         buffer.addFrom(1, 0, tmp,
-                       0, 0, samplesForBlock);
+                       0, 0, samplesForBlock, -1);
 
         buffer.applyGain(0.5);
     }
@@ -62,7 +62,7 @@ namespace utils {
     inline void enhanceStereo(AudioBuffer<float> &buffer, float enhancing) {
         jassert(buffer.getNumChannels() == 2);
         jassert(enhancing >= 0);
-        jassert(enhancing <= 1);
+        jassert(enhancing <= 2);
 
         int samplesForBlock = buffer.getNumSamples();
 

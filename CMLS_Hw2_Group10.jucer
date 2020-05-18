@@ -10,8 +10,8 @@
       <FILE id="TsF8K7" name="scheme.xml" compile="0" resource="1" file="resources/scheme.xml"/>
     </GROUP>
     <GROUP id="{F8A20297-1A39-AC16-ADBD-3F9532B76BB3}" name="Source">
-      <FILE id="muEExV" name="MorphingLfo.cpp" compile="1" resource="0" file="Source/MorphingLfo.cpp"/>
-      <FILE id="rBHW0g" name="MorphingLfo.h" compile="0" resource="0" file="Source/MorphingLfo.h"/>
+      <FILE id="muEExV" name="CustomLfo.cpp" compile="1" resource="0" file="Source/CustomLfo.cpp"/>
+      <FILE id="rBHW0g" name="CustomLfo.h" compile="0" resource="0" file="Source/CustomLfo.h"/>
       <FILE id="QrPCOG" name="Chorus.cpp" compile="1" resource="0" file="Source/Chorus.cpp"/>
       <FILE id="mCJjKL" name="ProcessorTemplate.h" compile="0" resource="0"
             file="Source/ProcessorTemplate.h"/>
