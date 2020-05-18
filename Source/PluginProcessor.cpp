@@ -81,7 +81,6 @@ void Cmls_hw2_group10AudioProcessor::parameterChanged(const String &param, float
         chorus.setWet(value);
     } else if (param.equalsIgnoreCase("blur")) {
         chorus.setBlurLevel(value);
-        chorus.setBlurDelayTime(value);
     } else if (param.equalsIgnoreCase("rate")) {
         chorus.setLfoRate(value);
     } else if (param.equalsIgnoreCase("enhance")) {
@@ -175,7 +174,6 @@ void Cmls_hw2_group10AudioProcessor::prepareToPlay(double sampleRate, int sample
 
     blur = treeState.getParameterAsValue(IDs::blur).getValue();
     chorus.setBlurLevel(blur);
-    chorus.setBlurDelayTime(blur);
 
     rate = treeState.getParameterAsValue(IDs::rate).getValue();
     chorus.setLfoRate(rate);

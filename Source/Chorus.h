@@ -99,7 +99,7 @@ private:
     Delay blurStereoDelay;
 
     // delay time for the blur delays
-    float blurDelayTime = 0.1;
+    float blurDelayTime = 0.08;
 
     // blur amount
     float blurLevel = 0;

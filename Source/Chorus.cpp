@@ -52,7 +52,7 @@ void Chorus::setWet(float param) {
 void Chorus::setBlurLevel(float param) {
     jassert(param >= 0);
     jassert(param <= 1);
-    param = jmap(param, 0.0f, 0.6f);
+    param = jmap(param, 0.0f, 0.4f);
     this->blurLevel = param;
 }
 
@@ -67,7 +67,7 @@ void Chorus::setBlurFeedback(float param) {
 void Chorus::setLfoRate(float param) {
     jassert(param >= 0);
     jassert(param <= 1);
-    float frequency = jmap(param, 0.5f, 6.0f);
+    float frequency = jmap(param, 0.5f, 8.0f);
     float randScale = 0.3;
     for (int i = 0; i < delaysForChannel * 2; i++) {
         float rand = (Random::getSystemRandom().nextFloat() - 0.5f) * 2;
@@ -101,7 +101,7 @@ void Chorus::setLfoDepth(float param) {
 void Chorus::setBlurDelayTime(float param) {
     jassert(param >= 0);
     jassert(param <= 1);
-    float blurDelayTime = jmap(param, 0.07f, 0.15f);
+    float blurDelayTime = jmap(param, 0.0f, 1.0f);
     this->blurDelayTime = blurDelayTime;
     blurStereoDelay.setDelay(blurDelayTime);
 }
@@ -193,8 +193,10 @@ void Chorus::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) 
     //buffer.applyGain(channel, 0, numberOfSamples, 1 - blurMix);
     buffer.addFrom(0, 0, *bufferPool[2],
                            0, 0, numberOfSamples, blurLevel);
+    buffer.addFrom(1, 0, *bufferPool[2],
+                   1, 0, numberOfSamples, blurLevel);
 
-    // MID SIDE processing TODO: bugged
+    // MID SIDE processing
     if (buffer.getNumChannels() == 2) {
         // midside processing applied on a copy in order to do dry/mix
         bufferPool[2]->copyFrom(0, 0, buffer,

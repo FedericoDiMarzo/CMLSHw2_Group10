@@ -38,7 +38,6 @@ void Delay::setLfoSpeed(float frequency) {
 }
 
 void Delay::setLfoIntensity(float intensity) {
-    //jassert(intensity <= 0.0000003);
     lfoIntensity = intensity;
 }
 
