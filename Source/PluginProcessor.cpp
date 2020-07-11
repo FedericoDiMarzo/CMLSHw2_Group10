@@ -106,6 +106,10 @@ void Cmls_hw2_group10AudioProcessor::getStateInformation(MemoryBlock &destData) 
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
     // magicState.getStateInformation(destData);
+        auto state = treeState.copyState();
+        std::unique_ptr<juce::XmlElement> xml (state.createXml());
+        copyXmlToBinary (*xml, destData);
+    
 
 }
 
@@ -113,6 +117,11 @@ void Cmls_hw2_group10AudioProcessor::setStateInformation(const void *data, int s
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
     // magicState.setStateInformation(data, sizeInBytes, getActiveEditor());
+     std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+ 
+        if (xmlState.get() != nullptr)
+            if (xmlState->hasTagName (treeState.state.getType()))
+                treeState.replaceState (juce::ValueTree::fromXml (*xmlState));
 }
 
 //==============================================================================
@@ -157,13 +166,6 @@ Cmls_hw2_group10AudioProcessor::~Cmls_hw2_group10AudioProcessor() {
 // AudioProcessor main functions
 
 void Cmls_hw2_group10AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
-
-    // just to be safe
-    treeState.getParameter("mix")->setValue(0.5);
-    treeState.getParameter("enhance")->setValue(0.5);
-    treeState.getParameter("intensity")->setValue(0.3);
-    treeState.getParameter("rate")->setValue(0.3);
-    treeState.getParameter("blur")->setValue(0.0);
 
 
     //setting the initial state
